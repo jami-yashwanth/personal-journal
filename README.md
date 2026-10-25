@@ -53,4 +53,4 @@ app/src/main/java/com/personal/journal/
   ui/          one package per screen (Compose + ViewModel), shared components, theme
 ```
 
-Design spec and implementation plan live in `docs/superpowers/`.
+Design spec and implementation plan live in `docs/superpowers/`; design mockups in `docs/design/` (final look: `final-cool-*.png`).
