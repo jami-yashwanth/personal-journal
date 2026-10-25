@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,6 +65,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlin.math.abs
@@ -80,6 +82,7 @@ fun CaptureScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalActivity.current
 
     var granted by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -110,9 +113,15 @@ fun CaptureScreen(
     LaunchedEffect(granted, cameraEnabled) {
         if (granted && cameraEnabled) controller.bindToLifecycle(lifecycleOwner) else controller.unbind()
     }
-    LaunchedEffect(flashOn) { controller.imageCaptureFlashMode = if (flashOn) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF }
-    LaunchedEffect(front) {
+    // The front camera has no flash unit, so it lights the screen instead. Screen flash needs the camera set to front
+    // first and a preview on screen to provide the light, which only exists once camera access is granted.
+    LaunchedEffect(front, flashOn, granted) {
         controller.cameraSelector = if (front) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+        controller.imageCaptureFlashMode = when {
+            !flashOn || !granted -> ImageCapture.FLASH_MODE_OFF
+            front -> ImageCapture.FLASH_MODE_SCREEN
+            else -> ImageCapture.FLASH_MODE_ON
+        }
     }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20)) { uris ->
@@ -151,7 +160,16 @@ fun CaptureScreen(
         ) {
             if (granted) {
                 AndroidView(
-                    factory = { PreviewView(it).apply { this.controller = controller; scaleType = PreviewView.ScaleType.FILL_CENTER } },
+                    // COMPATIBLE renders into a TextureView, which moves with screen transitions; the default SurfaceView stays put.
+                    factory = {
+                        PreviewView(it).apply {
+                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                            // Screen flash for the front camera lights up this window.
+                            setScreenFlashWindow(activity?.window)
+                            this.controller = controller
+                            scaleType = PreviewView.ScaleType.FILL_CENTER
+                        }
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
                 Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -214,31 +232,42 @@ fun CaptureScreen(
 }
 
 /**
- * Calls [onOpen] on a deliberate upward drag. Listens on the Initial pass because the camera preview (a PreviewView)
- * consumes touches for tap-to-focus and pinch-to-zoom; a second finger means a pinch, so the gesture is dropped.
- * Only applied to the area above the shutter row, which never reaches the system's bottom home-gesture zone.
+ * Calls [onOpen] on an upward drag past [SwipeUpDistance], or a shorter upward flick. Listens on the Initial pass
+ * because the camera preview (a PreviewView) consumes touches for tap-to-focus and pinch-to-zoom; a second finger
+ * means a pinch, so the gesture is dropped. Only applied to the area above the shutter row, which never reaches the
+ * system's bottom home-gesture zone.
  */
-private fun Modifier.swipeUpToOpen(onOpen: () -> Unit): Modifier = pointerInput(Unit) {
-    val threshold = SwipeUpThreshold.toPx()
+internal fun Modifier.swipeUpToOpen(onOpen: () -> Unit): Modifier = pointerInput(Unit) {
+    val distance = SwipeUpDistance.toPx()
+    val flickDistance = FlickDistance.toPx()
+    val flickVelocity = FlickVelocity.toPx()
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val velocity = VelocityTracker().apply { addPosition(down.uptimeMillis, down.position) }
         var drag = Offset.Zero
         while (true) {
             val event = awaitPointerEvent(PointerEventPass.Initial)
             if (event.changes.size > 1) return@awaitEachGesture
             val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
-            if (!change.pressed) return@awaitEachGesture
+            // The lift carries the last stretch of movement, so count it before deciding.
             drag += change.positionChange()
-            if (-drag.y > threshold && -drag.y > 2 * abs(drag.x)) {
+            velocity.addPosition(change.uptimeMillis, change.position)
+            val upward = -drag.y > 2 * abs(drag.x)
+            val opened = upward && if (change.pressed) -drag.y > distance else
+                -drag.y > distance || (-drag.y > flickDistance && -velocity.calculateVelocity().y > flickVelocity)
+            if (opened) {
                 change.consume()
                 onOpen()
                 return@awaitEachGesture
             }
+            if (!change.pressed) return@awaitEachGesture
         }
     }
 }
 
-private val SwipeUpThreshold = 80.dp
+private val SwipeUpDistance = 80.dp
+private val FlickDistance = 24.dp
+private val FlickVelocity = 600.dp
 
 @Composable
 private fun CameraOff(onOpenSettings: () -> Unit) {

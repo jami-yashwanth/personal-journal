@@ -16,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,7 +34,7 @@ fun PrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modif
             .height(height)
             .clip(JournalShapes.button)
             .background(JournalColors.PrimaryFill)
-            .alpha(if (enabled) 1f else 0.4f)
+            .graphicsLayer { alpha = if (enabled) 1f else 0.4f }
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 26.dp),
         contentAlignment = Alignment.Center,
@@ -75,6 +75,7 @@ fun CircleIconButton(
     Box(
         modifier
             .size(maxOf(size, 48.dp))
+            .clip(CircleShape)
             .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

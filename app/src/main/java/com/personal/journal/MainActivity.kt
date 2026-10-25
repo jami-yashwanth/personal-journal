@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -156,9 +158,14 @@ class MainActivity : FragmentActivity() {
     }
 }
 
+/** Timing shared by the camera-to-journal slide, so both screens move as one. */
+private fun <T> sheet() = tween<T>(durationMillis = 320, easing = FastOutSlowInEasing)
+
 @Composable
 private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, cameraEnabled: Boolean) {
     val container = appContainer()
+    // Lives as long as the activity so Month is already loaded when it slides up over the camera.
+    val monthVm = viewModel(viewModelStoreOwner = activity) { MonthViewModel(container.repository) }
     NavHost(
         nav,
         startDestination = Routes.CAPTURE,
@@ -166,10 +173,15 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         enterTransition = { fadeIn() },
         exitTransition = { fadeOut() },
     ) {
-        composable(Routes.CAPTURE) {
+        composable(
+            Routes.CAPTURE,
+            // The camera lifts away as the journal rises over it, and settles back when the journal drops.
+            exitTransition = { if (targetState.destination.route == Routes.MONTH) slideOutVertically(sheet()) { -it / 4 } + fadeOut(sheet()) else fadeOut() },
+            popEnterTransition = { if (initialState.destination.route == Routes.MONTH) slideInVertically(sheet()) { -it / 4 } + fadeIn(sheet()) else fadeIn() },
+        ) {
             CaptureScreen(
                 cameraEnabled = cameraEnabled,
-                onOpenMonth = { nav.navigate(Routes.MONTH) },
+                onOpenMonth = { monthVm.showCurrentMonth(); nav.navigate(Routes.MONTH) },
                 onCaptured = { nav.navigate(Routes.review(it)) },
                 onImport = { container.pendingImport = it; nav.navigate(Routes.IMPORT) },
                 onWrite = { nav.navigate(Routes.WRITE) },
@@ -193,13 +205,13 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         composable(
             Routes.MONTH,
             // Swiping up from the camera pulls the journal up from below; going back drops it down again.
-            enterTransition = { if (initialState.destination.route == Routes.CAPTURE) slideInVertically { it } else fadeIn() },
-            popExitTransition = { if (targetState.destination.route == Routes.CAPTURE) slideOutVertically { it } else fadeOut() },
+            enterTransition = { if (initialState.destination.route == Routes.CAPTURE) slideInVertically(sheet()) { it } else fadeIn() },
+            popExitTransition = { if (targetState.destination.route == Routes.CAPTURE) slideOutVertically(sheet()) { it } else fadeOut() },
         ) {
             val status by container.settings.backupStatus.collectAsState(initial = null)
             val connected by container.backup.connected.collectAsState()
             MonthScreen(
-                vm = viewModel { MonthViewModel(container.repository) },
+                vm = monthVm,
                 photoFile = container.repository::photoFile,
                 banner = backupBanner(connected, status, System.currentTimeMillis()),
                 onOpenDay = { nav.navigate(Routes.day(it)) },

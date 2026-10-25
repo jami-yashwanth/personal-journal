@@ -25,7 +25,8 @@ class MonthViewModel(private val repository: JournalRepository) : ViewModel() {
             val tags = repository.monthTags(m)
             buildMonthUi(m, entries, repository.today(), tag?.takeIf { it in tags }, tags)
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        // Loaded up front and kept current, so the journal has content on its first frame when it slides in.
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun setTag(tag: String?) {
         activeTag.value = tag
@@ -36,6 +37,9 @@ class MonthViewModel(private val repository: JournalRepository) : ViewModel() {
         activeTag.value = null
         month.value = m
     }
+
+    /** Back to this month with no tag filter, as when the journal is opened from the camera. */
+    fun showCurrentMonth() = showMonth(YearMonth.from(LocalDate.parse(repository.today())))
 
     fun previous() = showMonth(month.value.minusMonths(1))
 

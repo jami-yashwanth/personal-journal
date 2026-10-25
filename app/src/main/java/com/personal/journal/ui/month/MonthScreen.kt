@@ -25,11 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -130,7 +130,7 @@ private val RoundedFab = androidx.compose.foundation.shape.RoundedCornerShape(18
 
 @Composable
 private fun Tile(tile: TileUi, photoFile: (String) -> File, onClick: () -> Unit) {
-    val modifier = Modifier.fillMaxSize().alpha(if (tile.dimmed) 0.18f else 1f).clip(JournalShapes.tile)
+    val modifier = Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }.clip(JournalShapes.tile)
         .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}", onClick = onClick)
     if (tile.thumbs.isEmpty()) {
         Column(modifier.background(JournalColors.Surface).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
