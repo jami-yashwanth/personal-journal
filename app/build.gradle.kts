@@ -19,9 +19,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release key lives outside the repo; its path and passwords come from ~/.gradle/gradle.properties.
+    val storeFilePath = providers.gradleProperty("JOURNAL_STORE_FILE").orNull
+    signingConfigs {
+        if (storeFilePath != null) {
+            create("release") {
+                storeFile = file(storeFilePath)
+                storePassword = providers.gradleProperty("JOURNAL_STORE_PASSWORD").get()
+                keyAlias = providers.gradleProperty("JOURNAL_KEY_ALIAS").get()
+                keyPassword = providers.gradleProperty("JOURNAL_KEY_PASSWORD").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (storeFilePath != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 
