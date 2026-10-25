@@ -1,6 +1,7 @@
 package com.personal.journal
 
 import android.app.Application
+import kotlinx.coroutines.launch
 
 class JournalApp : Application() {
     lateinit var container: AppContainer
@@ -9,5 +10,6 @@ class JournalApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        container.appScope.launch { container.repository.startupCleanup() }
     }
 }
