@@ -67,6 +67,7 @@ import java.util.UUID
 @Composable
 fun CaptureScreen(
     vm: CaptureViewModel,
+    cameraEnabled: Boolean,
     onOpenMonth: () -> Unit,
     onCaptured: (File) -> Unit,
     onImport: (List<Uri>) -> Unit,
@@ -102,7 +103,9 @@ fun CaptureScreen(
     var flashOn by rememberSaveable { mutableStateOf(false) }
     var front by rememberSaveable { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
-    LaunchedEffect(granted) { if (granted) controller.bindToLifecycle(lifecycleOwner) }
+    LaunchedEffect(granted, cameraEnabled) {
+        if (granted && cameraEnabled) controller.bindToLifecycle(lifecycleOwner) else controller.unbind()
+    }
     LaunchedEffect(flashOn) { controller.imageCaptureFlashMode = if (flashOn) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF }
     LaunchedEffect(front) {
         controller.cameraSelector = if (front) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA

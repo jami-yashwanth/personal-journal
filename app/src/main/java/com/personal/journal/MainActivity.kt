@@ -43,6 +43,16 @@ import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalTheme
 import com.personal.journal.ui.write.WriteScreen
 import com.personal.journal.ui.write.WriteViewModel
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.collectAsState
+import com.personal.journal.ui.lock.Biometrics
+import com.personal.journal.ui.lock.LockScreen
+import com.personal.journal.ui.settings.SettingsScreen
+import com.personal.journal.ui.settings.SettingsViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -55,6 +65,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val DAY = "day/{date}"
     const val ENTRY = "entry/{id}"
+    const val BACKUP_SETUP = "backup-setup"
+    const val RESTORE = "restore"
     fun review(file: File) = "review?path=${Uri.encode(file.path)}"
     fun day(date: String) = "day/$date"
     fun entry(id: String) = "entry/$id"
@@ -71,14 +83,36 @@ class MainActivity : FragmentActivity() {
             val container = (application as JournalApp).container
             container.appScope.launch { DebugSeeder.seed(container.repository) }
         }
+        val container = (application as JournalApp).container
         setContent {
             JournalTheme {
                 val nav = rememberNavController()
                 LaunchedEffect(shortcut) {
-                    if (shortcut == ACTION_WRITE) nav.navigate(Routes.WRITE) { launchSingleTop = true }
+                    when (shortcut) {
+                        ACTION_WRITE -> nav.navigate(Routes.WRITE) { launchSingleTop = true }
+                        ACTION_CAPTURE -> nav.popBackStack(Routes.CAPTURE, inclusive = false)
+                    }
                     shortcut = null
                 }
-                JournalNavHost(nav)
+                val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+                val lockOn by container.settings.lockEnabled.collectAsState(initial = null)
+                Box(Modifier.fillMaxSize().background(JournalColors.Background)) {
+                    val needsLock = lockOn != false && Biometrics.available(this@MainActivity) && container.lockGate.locked
+                    // Ask for notifications only once the journal is open, never on top of the lock prompt.
+                    LaunchedEffect(needsLock, lockOn) {
+                        if (lockOn != null && !needsLock && Build.VERSION.SDK_INT >= 33 &&
+                            container.settings.reminderEnabled.first() && container.settings.firstNotificationAsk()
+                        ) {
+                            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                    JournalNavHost(nav, this@MainActivity, cameraEnabled = !needsLock && lockOn != null)
+                    if (lockOn == null || needsLock) {
+                        LockScreen(onUnlock = {
+                            if (lockOn == true) Biometrics.prompt(this@MainActivity, "Unlock journal") { container.lockGate.unlocked() }
+                        })
+                    }
+                }
             }
         }
     }
@@ -95,7 +129,7 @@ class MainActivity : FragmentActivity() {
 }
 
 @Composable
-private fun JournalNavHost(nav: NavHostController) {
+private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, cameraEnabled: Boolean) {
     val container = appContainer()
     NavHost(
         nav,
@@ -107,6 +141,7 @@ private fun JournalNavHost(nav: NavHostController) {
         composable(Routes.CAPTURE) {
             CaptureScreen(
                 vm = viewModel { CaptureViewModel(container.repository) },
+                cameraEnabled = cameraEnabled,
                 onOpenMonth = { nav.navigate(Routes.MONTH) },
                 onCaptured = { nav.navigate(Routes.review(it)) },
                 onImport = { container.pendingImport = it; nav.navigate(Routes.IMPORT) },
@@ -171,6 +206,23 @@ private fun JournalNavHost(nav: NavHostController) {
                 onCancel = { container.pendingImport = emptyList(); nav.popBackStack() },
             )
         }
-        composable(Routes.SETTINGS) { Box(Modifier.fillMaxSize()) }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                vm = viewModel {
+                    SettingsViewModel(
+                        container.repository, container.settings, container.context.filesDir,
+                        onReminderChanged = { on, t -> container.applyReminder(on, t) },
+                        backup = container.backupControls,
+                    )
+                },
+                lockAvailable = remember { Biometrics.available(activity) },
+                onBack = { nav.popBackStack() },
+                onSetUpBackup = { nav.navigate(Routes.BACKUP_SETUP) },
+                onRestore = { nav.navigate(Routes.RESTORE) },
+                onShowPhrase = { verified -> Biometrics.prompt(activity, "Show recovery phrase", verified) },
+            )
+        }
+        composable(Routes.BACKUP_SETUP) { Box(Modifier.fillMaxSize()) }
+        composable(Routes.RESTORE) { Box(Modifier.fillMaxSize()) }
     }
 }
