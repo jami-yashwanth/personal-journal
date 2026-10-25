@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.personal.journal.data.JournalRepository
 import com.personal.journal.data.PhotoStore
 import com.personal.journal.data.db.JournalDatabase
+import kotlinx.coroutines.flow.first
 import java.io.File
 import java.time.Clock
 import java.time.Instant
@@ -37,3 +38,5 @@ class TestJournal(
 
     fun close() = db.close()
 }
+
+suspend fun JournalRepository.observeDayFirst(date: String) = observeDay(date).first()

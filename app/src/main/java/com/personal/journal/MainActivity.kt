@@ -31,6 +31,10 @@ import com.personal.journal.ui.day.DayScreen
 import com.personal.journal.ui.day.DayViewModel
 import com.personal.journal.ui.entry.EntryScreen
 import com.personal.journal.ui.entry.EntryViewModel
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.personal.journal.ui.importer.ImportScreen
+import com.personal.journal.ui.importer.ImportViewModel
 import com.personal.journal.ui.month.MonthScreen
 import com.personal.journal.ui.month.MonthViewModel
 import com.personal.journal.ui.review.ReviewScreen
@@ -154,7 +158,19 @@ private fun JournalNavHost(nav: NavHostController) {
                 onBack = { nav.popBackStack() },
             )
         }
-        composable(Routes.IMPORT) { Box(Modifier.fillMaxSize()) }
+        composable(Routes.IMPORT) {
+            val context = LocalContext.current
+            val uris = remember { container.pendingImport }
+            ImportScreen(
+                vm = viewModel { ImportViewModel(container.repository, open = { context.contentResolver.openInputStream(it) }) },
+                uris = uris,
+                onDone = {
+                    container.pendingImport = emptyList()
+                    nav.navigate(Routes.MONTH) { popUpTo(Routes.CAPTURE) }
+                },
+                onCancel = { container.pendingImport = emptyList(); nav.popBackStack() },
+            )
+        }
         composable(Routes.SETTINGS) { Box(Modifier.fillMaxSize()) }
     }
 }
