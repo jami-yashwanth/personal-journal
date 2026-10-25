@@ -22,6 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
@@ -83,8 +85,10 @@ class BackupManager(
         return key
     }
 
+    /** Connecting (to any bucket) re-uploads the whole journal: rows marked backed up may have gone to a different bucket. */
     suspend fun connect(c: R2Credentials, words: List<String>) {
         val key = keyFor(c, words)
+        db.entryDao().resetBackup()
         credentials.saveR2(c)
         credentials.saveMasterKey(key)
         credentials.savePhrase(words)
@@ -129,7 +133,13 @@ class BackupManager(
     }
 
     /** One backup pass with status bookkeeping. Returns true when it should be retried. */
-    suspend fun runPass(): Boolean {
+    suspend fun runPass(): Boolean = passLock.withLock { runPassLocked() }
+
+    /** True when [c] is the bucket this phone currently backs up to. */
+    fun isCurrentBucket(c: R2Credentials): Boolean =
+        _connected.value && credentials.loadR2()?.let { it.accountId == c.accountId && it.bucket == c.bucket } == true
+
+    private suspend fun runPassLocked(): Boolean {
         val c = credentials.loadR2() ?: return false
         val key = credentials.loadMasterKey() ?: return false
         val report = BackupRunner(db, photos, client(c), key).runOnce()
@@ -144,6 +154,8 @@ class BackupManager(
     }
 
     companion object {
+        /** One backup pass at a time per process; overlapping passes could re-upload a just-deleted entry. */
+        private val passLock = Mutex()
         const val WORK_SOON = "backup-soon"
         const val WORK_PERIODIC = "backup-periodic"
     }

@@ -45,6 +45,8 @@ import com.personal.journal.ui.write.WriteScreen
 import com.personal.journal.ui.write.WriteViewModel
 import android.Manifest
 import android.os.Build
+import android.view.WindowManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.collectAsState
@@ -72,6 +74,7 @@ object Routes {
     const val ENTRY = "entry/{id}"
     const val BACKUP_SETUP = "backup-setup"
     const val RESTORE = "restore"
+    val WITH_UNSAVED_WORK = setOf(REVIEW, WRITE, IMPORT, ENTRY, BACKUP_SETUP, RESTORE)
     fun review(file: File) = "review?path=${Uri.encode(file.path)}"
     fun day(date: String) = "day/$date"
     fun entry(id: String) = "entry/$id"
@@ -95,7 +98,10 @@ class MainActivity : FragmentActivity() {
                 LaunchedEffect(shortcut) {
                     when (shortcut) {
                         ACTION_WRITE -> nav.navigate(Routes.WRITE) { launchSingleTop = true }
-                        ACTION_CAPTURE -> nav.popBackStack(Routes.CAPTURE, inclusive = false)
+                        // Don't throw away a draft, an unsaved photo or a setup in progress.
+                        ACTION_CAPTURE -> if (nav.currentDestination?.route !in Routes.WITH_UNSAVED_WORK) {
+                            nav.popBackStack(Routes.CAPTURE, inclusive = false)
+                        }
                     }
                     shortcut = null
                 }
@@ -111,7 +117,12 @@ class MainActivity : FragmentActivity() {
                             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }
                     }
-                    JournalNavHost(nav, this@MainActivity, cameraEnabled = !needsLock && lockOn != null)
+                    val hidden = needsLock || lockOn == null
+                    // While locked the journal stays composed (keeps navigation) but is invisible to screen readers.
+                    Box(if (hidden) Modifier.fillMaxSize().clearAndSetSemantics { } else Modifier.fillMaxSize()) {
+                        JournalNavHost(nav, this@MainActivity, cameraEnabled = !hidden)
+                    }
+                    LaunchedEffect(lockOn) { hideFromRecents(lockOn != false) }
                     if (lockOn == null || needsLock) {
                         LockScreen(onUnlock = {
                             if (lockOn == true) Biometrics.prompt(this@MainActivity, "Unlock journal") { container.lockGate.unlocked() }
@@ -119,6 +130,17 @@ class MainActivity : FragmentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    /** Keeps journal content out of the app-switcher thumbnail while the lock is on. */
+    private fun hideFromRecents(hide: Boolean) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            setRecentsScreenshotEnabled(!hide)
+        } else if (hide) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 

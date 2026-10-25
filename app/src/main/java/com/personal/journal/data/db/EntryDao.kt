@@ -30,6 +30,10 @@ interface EntryDao {
     @Query("UPDATE entries SET backedUpAt = :at WHERE id = :id AND updatedAt <= :at")
     suspend fun markBackedUp(id: String, at: Long)
 
+    /** Marks every row as not yet in the (new) bucket, so the next pass uploads the whole journal. */
+    @Query("UPDATE entries SET backedUpAt = NULL")
+    suspend fun resetBackup()
+
     @Query("DELETE FROM entries WHERE id = :id")
     suspend fun purge(id: String)
 

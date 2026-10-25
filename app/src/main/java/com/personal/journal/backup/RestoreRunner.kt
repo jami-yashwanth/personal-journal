@@ -10,6 +10,7 @@ import com.personal.journal.data.normalizeTag
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.withLock
 import java.io.ByteArrayInputStream
 import java.util.UUID
 import javax.crypto.SecretKey
@@ -20,13 +21,15 @@ data class RestoreProgress(val done: Int, val total: Int, val failed: Int = 0)
 
 /**
  * Rebuilds the journal from the bucket. Entries merge by id (newer updatedAt wins), tombstones are
- * skipped, and restored rows are marked as already backed up so nothing is re-uploaded.
+ * skipped. Restored rows count as backed up only when [markBackedUp] (restoring from this phone's own bucket).
  */
 class RestoreRunner(
     private val db: JournalDatabase,
     private val photos: PhotoStore,
     private val store: ObjectStore,
     private val phrases: RecoveryPhrase,
+    /** True only when restoring from the bucket this phone backs up to; otherwise restored rows still need uploading. */
+    private val markBackedUp: Boolean = true,
 ) {
     /** Checks the phrase against the bucket's key check before anything else is downloaded. */
     suspend fun verify(words: List<String>): SecretKey {
@@ -58,25 +61,28 @@ class RestoreRunner(
         if (existing != null && existing.updatedAt >= e.updatedAt) return true
 
         val type = EntryType.valueOf(e.type)
-        val stored = if (type == EntryType.PHOTO) {
+        val photoBytes = if (type == EntryType.PHOTO) {
             val photoKey = BackupCodec.photoKey(e.id)
-            val photo = store.get(photoKey) ?: return false
-            photos.save(e.id, ByteArrayInputStream(Envelope.open(key, photo, photoKey)))
+            Envelope.open(key, store.get(photoKey) ?: return false, photoKey)
         } else null
 
-        db.withTransaction {
-            db.entryDao().upsert(
-                EntryEntity(
-                    id = e.id, type = type, text = e.text, photoFile = stored?.photoFile, thumbFile = stored?.thumbFile,
-                    takenAt = e.takenAt, localDate = e.localDate, dateSource = DateSource.valueOf(e.dateSource),
-                    createdAt = e.createdAt, updatedAt = e.updatedAt, deletedAt = null, backedUpAt = e.updatedAt,
-                ),
-            )
-            val tagIds = e.tags.mapNotNull(::normalizeTag).distinct().map { name ->
-                db.tagDao().findByName(name)?.id
-                    ?: UUID.randomUUID().toString().also { db.tagDao().insert(TagEntity(it, name, useCount = 1, lastUsedAt = e.updatedAt)) }
+        photos.writeLock.withLock {
+            val stored = photoBytes?.let { photos.save(e.id, ByteArrayInputStream(it)) }
+            db.withTransaction {
+                db.entryDao().upsert(
+                    EntryEntity(
+                        id = e.id, type = type, text = e.text, photoFile = stored?.photoFile, thumbFile = stored?.thumbFile,
+                        takenAt = e.takenAt, localDate = e.localDate, dateSource = DateSource.valueOf(e.dateSource),
+                        createdAt = e.createdAt, updatedAt = e.updatedAt, deletedAt = null,
+                        backedUpAt = if (markBackedUp) e.updatedAt else null,
+                    ),
+                )
+                val tagIds = e.tags.mapNotNull(::normalizeTag).distinct().map { name ->
+                    db.tagDao().findByName(name)?.id
+                        ?: UUID.randomUUID().toString().also { db.tagDao().insert(TagEntity(it, name, useCount = 1, lastUsedAt = e.updatedAt)) }
+                }
+                db.tagDao().setTagsFor(e.id, tagIds)
             }
-            db.tagDao().setTagsFor(e.id, tagIds)
         }
         return true
     }

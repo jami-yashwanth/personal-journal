@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -22,6 +23,9 @@ class UnreadablePhotoException : IOException("This photo couldn't be read")
  * atomically via a .tmp file + rename so a crash never leaves a half-written photo.
  */
 class PhotoStore(private val filesDir: File) {
+    /** Serialises "write photo + insert row" against cleanup so a fresh photo is never swept as an orphan. */
+    val writeLock = Mutex()
+
     private val photos = File(filesDir, PHOTOS).apply { mkdirs() }
     private val thumbs = File(filesDir, THUMBS).apply { mkdirs() }
 

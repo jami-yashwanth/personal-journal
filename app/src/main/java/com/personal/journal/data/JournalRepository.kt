@@ -8,6 +8,7 @@ import com.personal.journal.data.db.EntryWithTags
 import com.personal.journal.data.db.JournalDatabase
 import com.personal.journal.data.db.TagEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import java.io.InputStream
 import java.time.Clock
@@ -46,17 +47,20 @@ class JournalRepository(
     ): String {
         if (freeBytes() < MIN_FREE_BYTES) throw InsufficientStorageException()
         val id = newId()
-        val stored = photos.save(id, source)
-        val (time, source) = when {
-            takenAt != null -> takenAt to dateSource
-            else -> exifDateToMillis(stored.exifTakenAt, zone())?.let { it to DateSource.EXIF }
-                ?: (now() to DateSource.FALLBACK_TODAY)
-        }
-        try {
-            insert(id, EntryType.PHOTO, caption?.trim()?.ifEmpty { null }, stored.photoFile, stored.thumbFile, time, source, tags)
-        } catch (e: Exception) {
-            photos.delete(id)
-            throw e
+        // Held across file write + row insert so startup cleanup never sees a file without its row.
+        photos.writeLock.withLock {
+            val stored = photos.save(id, source)
+            val (time, source) = when {
+                takenAt != null -> takenAt to dateSource
+                else -> exifDateToMillis(stored.exifTakenAt, zone())?.let { it to DateSource.EXIF }
+                    ?: (now() to DateSource.FALLBACK_TODAY)
+            }
+            try {
+                insert(id, EntryType.PHOTO, caption?.trim()?.ifEmpty { null }, stored.photoFile, stored.thumbFile, time, source, tags)
+            } catch (e: Exception) {
+                photos.delete(id)
+                throw e
+            }
         }
         return id
     }
@@ -102,13 +106,21 @@ class JournalRepository(
         onChanged()
     }
 
+    /**
+     * Always leaves a content-free tombstone (never a hard purge): an upload of this entry may already be
+     * in flight or done-but-unmarked, and only a tombstone lets backup remove it from the bucket.
+     * Backup purges the row once the tombstone is uploaded.
+     */
     suspend fun delete(id: String) {
         val current = entries.getById(id)?.entry ?: return
         photos.delete(id)
-        if (current.backedUpAt == null) {
-            entries.purge(id)
-        } else {
-            entries.upsert(current.copy(deletedAt = now(), updatedAt = nextVersion(current.updatedAt), photoFile = null, thumbFile = null))
+        db.withTransaction {
+            entries.upsert(
+                current.copy(
+                    text = null, photoFile = null, thumbFile = null,
+                    deletedAt = now(), updatedAt = nextVersion(current.updatedAt),
+                ),
+            )
             tags.clearTagsFor(id)
         }
         onChanged()
@@ -145,8 +157,11 @@ class JournalRepository(
 
     suspend fun monthTags(month: YearMonth): List<String> = tags.tagsUsedInMonth(month.toString()).map { it.name }
 
-    /** Removes photo files that no entry refers to. */
-    suspend fun startupCleanup(): Int = photos.cleanup(entries.allIds().toSet())
+    /** Removes photo files that no entry refers to, plus leftover raw camera captures in [cacheDir]. */
+    suspend fun startupCleanup(cacheDir: java.io.File? = null): Int = photos.writeLock.withLock {
+        val captures = cacheDir?.listFiles { f -> f.name.startsWith("capture-") }?.count { it.delete() } ?: 0
+        photos.cleanup(entries.allIds().toSet()) + captures
+    }
 
     fun photoFile(relative: String) = photos.file(relative)
 

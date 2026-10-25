@@ -74,7 +74,30 @@ class BackupRunnerTest {
         assertNull(store.objects[BackupCodec.photoKey(id)])
         val tomb = BackupCodec.decode(Envelope.open(key, store.objects[BackupCodec.entryKey(id)]!!, BackupCodec.entryKey(id)))
         assertNotNull(tomb.deletedAt)
+        assertNull("tombstone carries no content", tomb.text)
         assertNull(j.db.entryDao().getById(id))
+    }
+
+    @Test
+    fun deleteBeforeBackupStillRemovesUploadedObjects() = runTest {
+        // Upload happened but the row was never marked (e.g. process killed), then the user deletes.
+        val id = photoEntry()
+        store.objects[BackupCodec.entryKey(id)] = byteArrayOf(1)
+        store.objects[BackupCodec.photoKey(id)] = byteArrayOf(1)
+        j.repo.delete(id)
+        runner.runOnce()
+        assertNull(store.objects[BackupCodec.photoKey(id)])
+        val tomb = BackupCodec.decode(Envelope.open(key, store.objects[BackupCodec.entryKey(id)]!!, BackupCodec.entryKey(id)))
+        assertNotNull(tomb.deletedAt)
+    }
+
+    @Test
+    fun resetBackupReuploadsEverything() = runTest {
+        j.repo.saveText("a", emptyList(), j.now.toEpochMilli())
+        runner.runOnce()
+        assertTrue(j.db.entryDao().needsBackup().isEmpty())
+        j.db.entryDao().resetBackup()
+        assertEquals(1, j.db.entryDao().needsBackup().size)
     }
 
     @Test

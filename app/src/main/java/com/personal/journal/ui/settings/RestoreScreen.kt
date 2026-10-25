@@ -73,10 +73,15 @@ class RestoreViewModel(
         try {
             val creds = R2Credentials(accountId.trim(), accessKeyId.trim(), secret.trim(), bucket.trim())
             val words = manager.phrases.parse(phraseInput)
-            val runner = RestoreRunner(db, photos, manager.client(creds), manager.phrases)
-            val key = runner.verify(words)
-            runner.restore(key).collect { done = it.done; total = it.total; failed = it.failed }
+            val verifier = RestoreRunner(db, photos, manager.client(creds), manager.phrases)
+            val key = verifier.verify(words)
+            // Not connected yet: connect to this bucket first (that marks the whole journal for upload),
+            // then restored rows are already in this bucket. Connected elsewhere: restored rows must be uploaded.
             if (!manager.connected.value) manager.connect(creds, words)
+            val sameBucket = manager.isCurrentBucket(creds)
+            val runner = RestoreRunner(db, photos, manager.client(creds), manager.phrases, markBackedUp = sameBucket)
+            runner.restore(key).collect { done = it.done; total = it.total; failed = it.failed }
+            if (!sameBucket) manager.backUpNow()
             finished = true
         } catch (e: WrongPhraseException) {
             error = e.message

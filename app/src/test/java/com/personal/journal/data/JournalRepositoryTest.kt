@@ -144,10 +144,25 @@ class JournalRepositoryTest {
     }
 
     @Test
-    fun deleteNeverBackedUpPurges() = runTest {
-        val id = repo.saveText("x", emptyList(), now.toEpochMilli())
+    fun deleteAlwaysLeavesContentFreeTombstone() = runTest {
+        // Even never-backed-up entries keep a tombstone: an upload may already be in flight.
+        val id = repo.saveText("private words", listOf("gym"), now.toEpochMilli())
         repo.delete(id)
-        assertNull(db.entryDao().getById(id))
+        val row = db.entryDao().getById(id)!!
+        assertNotNull(row.entry.deletedAt)
+        assertNull(row.entry.text)
+        assertTrue(row.tags.isEmpty())
+        assertNull(repo.get(id))
+    }
+
+    @Test
+    fun startupCleanupSweepsRawCaptures() = runTest {
+        val cache = tmp.newFolder("cache")
+        File(cache, "capture-123.jpg").writeText("raw with gps")
+        File(cache, "other.txt").writeText("keep")
+        assertEquals(1, repo.startupCleanup(cache))
+        assertFalse(File(cache, "capture-123.jpg").exists())
+        assertTrue(File(cache, "other.txt").exists())
     }
 
     @Test

@@ -15,7 +15,7 @@ class JournalApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         container.appScope.launch {
-            runCatching { container.repository.startupCleanup() }
+            runCatching { container.repository.startupCleanup(cacheDir) }
             runCatching {
                 container.applyReminder(container.settings.reminderEnabled.first(), container.settings.reminderTime.first(), replace = false)
             }

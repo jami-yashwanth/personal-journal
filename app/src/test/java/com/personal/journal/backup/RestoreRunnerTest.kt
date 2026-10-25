@@ -111,6 +111,14 @@ class RestoreRunnerTest {
     }
 
     @Test
+    fun restoreFromOtherBucketLeavesRowsForUpload() = runTest {
+        backupSample()
+        val r = RestoreRunner(target.db, target.photos, store, phrases, markBackedUp = false)
+        r.restore(r.verify(phrase)).toList()
+        assertEquals(2, target.db.entryDao().needsBackup().size)
+    }
+
+    @Test
     fun emptyBucketReportsNoBackup() = runTest {
         val e = runCatching { runner().verify(phrase) }.exceptionOrNull()
         assertTrue(e is NoBackupException)
