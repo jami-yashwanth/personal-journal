@@ -32,6 +32,9 @@ class JournalRepository(
 
     fun now(): Long = clock.millis()
 
+    /** updatedAt doubles as a version for backup, so it must strictly increase even within one millisecond. */
+    private fun nextVersion(previous: Long) = maxOf(now(), previous + 1)
+
     fun today(): String = localDateOf(now(), zone())
 
     suspend fun savePhoto(
@@ -88,7 +91,7 @@ class JournalRepository(
     suspend fun update(id: String, text: String?, tags: List<String>?, takenAt: Long?) {
         db.withTransaction {
             val current = entries.getById(id) ?: return@withTransaction
-            var e = current.entry.copy(updatedAt = now())
+            var e = current.entry.copy(updatedAt = nextVersion(current.entry.updatedAt))
             if (text != null) e = e.copy(text = text.trim().ifEmpty { null })
             if (takenAt != null) {
                 e = e.copy(takenAt = takenAt, localDate = localDateOf(takenAt, zone()), dateSource = DateSource.MANUAL)
@@ -105,8 +108,7 @@ class JournalRepository(
         if (current.backedUpAt == null) {
             entries.purge(id)
         } else {
-            val t = now()
-            entries.upsert(current.copy(deletedAt = t, updatedAt = t, photoFile = null, thumbFile = null))
+            entries.upsert(current.copy(deletedAt = now(), updatedAt = nextVersion(current.updatedAt), photoFile = null, thumbFile = null))
             tags.clearTagsFor(id)
         }
         onChanged()

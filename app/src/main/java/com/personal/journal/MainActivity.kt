@@ -50,6 +50,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.collectAsState
 import com.personal.journal.ui.lock.Biometrics
 import com.personal.journal.ui.lock.LockScreen
+import com.personal.journal.data.BackupStatus
+import com.personal.journal.ui.settings.BackupSetupScreen
+import com.personal.journal.ui.settings.BackupSetupViewModel
 import com.personal.journal.ui.settings.SettingsScreen
 import com.personal.journal.ui.settings.SettingsViewModel
 import kotlinx.coroutines.flow.first
@@ -164,10 +167,12 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             )
         }
         composable(Routes.MONTH) {
+            val status by container.settings.backupStatus.collectAsState(initial = null)
+            val connected by container.backup.connected.collectAsState()
             MonthScreen(
                 vm = viewModel { MonthViewModel(container.repository) },
                 photoFile = container.repository::photoFile,
-                banner = null,
+                banner = backupBanner(connected, status, System.currentTimeMillis()),
                 onOpenDay = { nav.navigate(Routes.day(it)) },
                 onCapture = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
                 onWrite = { nav.navigate(Routes.WRITE) },
@@ -222,7 +227,21 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onShowPhrase = { verified -> Biometrics.prompt(activity, "Show recovery phrase", verified) },
             )
         }
-        composable(Routes.BACKUP_SETUP) { Box(Modifier.fillMaxSize()) }
+        composable(Routes.BACKUP_SETUP) {
+            BackupSetupScreen(
+                vm = viewModel { BackupSetupViewModel(container.backup) },
+                onDone = { nav.popBackStack() },
+                onBack = { nav.popBackStack() },
+            )
+        }
         composable(Routes.RESTORE) { Box(Modifier.fillMaxSize()) }
     }
+}
+
+/** Shown on the month view when backup has been failing for more than 3 days. */
+fun backupBanner(connected: Boolean, status: BackupStatus?, now: Long): String? {
+    val since = status?.failingSince ?: return null
+    if (!connected || status.error == null) return null
+    val days = (now - since) / 86_400_000L
+    return if (days >= 3) "Backup has been failing for $days days. Tap to fix." else null
 }
