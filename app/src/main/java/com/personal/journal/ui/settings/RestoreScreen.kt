@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -58,9 +59,9 @@ class RestoreViewModel(
     var bucket by mutableStateOf(saved?.bucket.orEmpty())
     var phraseInput by mutableStateOf(manager.credentials.loadPhrase()?.joinToString(" ").orEmpty())
     var running by mutableStateOf(false)
-    var done by mutableStateOf(0)
-    var total by mutableStateOf(0)
-    var failed by mutableStateOf(0)
+    var done by mutableIntStateOf(0)
+    var total by mutableIntStateOf(0)
+    var failed by mutableIntStateOf(0)
     var finished by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
 

@@ -116,11 +116,13 @@ fun MonthScreen(
             }
             Spacer(Modifier.height(100.dp))
         }
-        Box(
-            Modifier.align(Alignment.BottomEnd).padding(16.dp).size(56.dp).clip(RoundedFab).background(JournalColors.PrimaryFill)
-                .clickable(role = Role.Button, onClickLabel = "Capture", onClick = onCapture),
-            contentAlignment = Alignment.Center,
-        ) { Icon(JournalIcons.Camera, contentDescription = "Capture", tint = JournalColors.OnPrimary, modifier = Modifier.size(22.dp)) }
+        if (!(state.isEmpty && state.isCurrentMonth)) {
+            Box(
+                Modifier.align(Alignment.BottomEnd).padding(16.dp).size(56.dp).clip(RoundedFab).background(JournalColors.PrimaryFill)
+                    .clickable(role = Role.Button, onClickLabel = "Capture", onClick = onCapture),
+                contentAlignment = Alignment.Center,
+            ) { Icon(JournalIcons.Camera, contentDescription = "Capture", tint = JournalColors.OnPrimary, modifier = Modifier.size(22.dp)) }
+        }
     }
 }
 

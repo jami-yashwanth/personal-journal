@@ -82,8 +82,9 @@ fun CaptureScreen(
     }
     var asked by rememberSaveable { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
-    LaunchedEffect(Unit) {
-        if (!granted && !asked) {
+    // Never ask while the lock screen is up: the permission dialog would fight the unlock prompt.
+    LaunchedEffect(cameraEnabled) {
+        if (cameraEnabled && !granted && !asked) {
             asked = true
             permission.launch(Manifest.permission.CAMERA)
         }

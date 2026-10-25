@@ -38,11 +38,11 @@ class ImportViewModel(
     val items: StateFlow<List<ImportItem>> = _items
 
     suspend fun load(uris: List<Uri>) {
-        _items.value = withContext(Dispatchers.IO) { uris.map(::inspect) }
+        val now = repository.now()
+        _items.value = withContext(Dispatchers.IO) { uris.map { inspect(it, now) } }
     }
 
-    private fun inspect(uri: Uri): ImportItem {
-        val now = repository.now()
+    private fun inspect(uri: Uri, now: Long): ImportItem {
         val readable = runCatching {
             open(uri)?.use { s -> BitmapFactory.Options().apply { inJustDecodeBounds = true }.also { BitmapFactory.decodeStream(s, null, it) }.outWidth > 0 }
         }.getOrNull() == true
