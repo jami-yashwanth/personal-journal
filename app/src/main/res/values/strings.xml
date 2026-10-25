@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Journal</string>
+    <string name="shortcut_photo">Take photo</string>
+    <string name="shortcut_write">Write</string>
+</resources>
