@@ -53,6 +53,8 @@ import com.personal.journal.ui.lock.LockScreen
 import com.personal.journal.data.BackupStatus
 import com.personal.journal.ui.settings.BackupSetupScreen
 import com.personal.journal.ui.settings.BackupSetupViewModel
+import com.personal.journal.ui.settings.RestoreScreen
+import com.personal.journal.ui.settings.RestoreViewModel
 import com.personal.journal.ui.settings.SettingsScreen
 import com.personal.journal.ui.settings.SettingsViewModel
 import kotlinx.coroutines.flow.first
@@ -234,7 +236,13 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onBack = { nav.popBackStack() },
             )
         }
-        composable(Routes.RESTORE) { Box(Modifier.fillMaxSize()) }
+        composable(Routes.RESTORE) {
+            RestoreScreen(
+                vm = viewModel { RestoreViewModel(container.backup, container.db, container.photoStore) },
+                onDone = { nav.navigate(Routes.MONTH) { popUpTo(Routes.CAPTURE) } },
+                onBack = { nav.popBackStack() },
+            )
+        }
     }
 }
 
