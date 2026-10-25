@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.personal.journal.ui.appContainer
 import com.personal.journal.ui.capture.CaptureScreen
-import com.personal.journal.ui.capture.CaptureViewModel
 import com.personal.journal.ui.day.DayScreen
 import com.personal.journal.ui.day.DayViewModel
 import com.personal.journal.ui.entry.EntryScreen
@@ -167,7 +168,6 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
     ) {
         composable(Routes.CAPTURE) {
             CaptureScreen(
-                vm = viewModel { CaptureViewModel(container.repository) },
                 cameraEnabled = cameraEnabled,
                 onOpenMonth = { nav.navigate(Routes.MONTH) },
                 onCaptured = { nav.navigate(Routes.review(it)) },
@@ -190,7 +190,12 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onClose = { nav.popBackStack() },
             )
         }
-        composable(Routes.MONTH) {
+        composable(
+            Routes.MONTH,
+            // Swiping up from the camera pulls the journal up from below; going back drops it down again.
+            enterTransition = { if (initialState.destination.route == Routes.CAPTURE) slideInVertically { it } else fadeIn() },
+            popExitTransition = { if (targetState.destination.route == Routes.CAPTURE) slideOutVertically { it } else fadeOut() },
+        ) {
             val status by container.settings.backupStatus.collectAsState(initial = null)
             val connected by container.backup.connected.collectAsState()
             MonthScreen(

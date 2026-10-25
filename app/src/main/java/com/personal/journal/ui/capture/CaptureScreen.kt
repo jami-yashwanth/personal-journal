@@ -45,28 +45,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.personal.journal.ui.components.CircleIconButton
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlin.math.abs
 import java.io.File
 import java.util.UUID
 
 @Composable
 fun CaptureScreen(
-    vm: CaptureViewModel,
     cameraEnabled: Boolean,
     onOpenMonth: () -> Unit,
     onCaptured: (File) -> Unit,
@@ -75,7 +80,6 @@ fun CaptureScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val count by vm.todayCount.collectAsStateWithLifecycle()
 
     var granted by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -92,7 +96,6 @@ fun CaptureScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                vm.refreshDay()
                 granted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
             }
         }
@@ -137,11 +140,13 @@ fun CaptureScreen(
         )
     }
 
+    val openMonth by rememberUpdatedState(onOpenMonth)
+
     Column(
         Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding(),
     ) {
         Box(
-            Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 14.dp)
+            Modifier.fillMaxWidth().weight(1f).swipeUpToOpen { openMonth() }.padding(start = 12.dp, end = 12.dp, top = 14.dp)
                 .clip(JournalShapes.photo).background(JournalColors.Surface),
         ) {
             if (granted) {
@@ -172,26 +177,19 @@ fun CaptureScreen(
             }
         }
 
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 16.dp).height(60.dp)
-                .clip(RoundedTodayShape).background(JournalColors.Surface)
-                .clickable(role = Role.Button, onClick = onOpenMonth).padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+        // The only hint that the journal sits below the camera: swipe up anywhere above it, or tap it.
+        Box(
+            Modifier.align(Alignment.CenterHorizontally).size(width = 72.dp, height = 40.dp).swipeUpToOpen { openMonth() }
+                .clip(JournalShapes.pill)
+                .clickable(role = Role.Button, onClick = onOpenMonth)
+                .semantics { contentDescription = "Open journal" },
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
-                buildAnnotatedString {
-                    append("Today")
-                    withStyle(SpanStyle(color = JournalColors.TextMuted)) { append(", $count ${if (count == 1) "entry" else "entries"}") }
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = JournalColors.TextPrimary,
-            )
-            Icon(JournalIcons.ChevronRight, contentDescription = null, tint = JournalColors.TextMuted, modifier = Modifier.size(18.dp))
+            Box(Modifier.size(width = 36.dp, height = 4.dp).clip(JournalShapes.pill).background(JournalColors.TextMuted))
         }
 
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 28.dp),
+            Modifier.fillMaxWidth().padding(start = 40.dp, end = 40.dp, top = 4.dp, bottom = 28.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -215,7 +213,32 @@ fun CaptureScreen(
     }
 }
 
-private val RoundedTodayShape = JournalShapes.tile
+/**
+ * Calls [onOpen] on a deliberate upward drag. Listens on the Initial pass because the camera preview (a PreviewView)
+ * consumes touches for tap-to-focus and pinch-to-zoom; a second finger means a pinch, so the gesture is dropped.
+ * Only applied to the area above the shutter row, which never reaches the system's bottom home-gesture zone.
+ */
+private fun Modifier.swipeUpToOpen(onOpen: () -> Unit): Modifier = pointerInput(Unit) {
+    val threshold = SwipeUpThreshold.toPx()
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var drag = Offset.Zero
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.changes.size > 1) return@awaitEachGesture
+            val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+            if (!change.pressed) return@awaitEachGesture
+            drag += change.positionChange()
+            if (-drag.y > threshold && -drag.y > 2 * abs(drag.x)) {
+                change.consume()
+                onOpen()
+                return@awaitEachGesture
+            }
+        }
+    }
+}
+
+private val SwipeUpThreshold = 80.dp
 
 @Composable
 private fun CameraOff(onOpenSettings: () -> Unit) {
