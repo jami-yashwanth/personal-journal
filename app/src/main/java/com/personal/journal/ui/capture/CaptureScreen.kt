@@ -69,6 +69,15 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import kotlin.math.abs
+import android.graphics.Bitmap
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.Observer
 import java.io.File
 import java.util.UUID
 
@@ -96,11 +105,16 @@ fun CaptureScreen(
             permission.launch(Manifest.permission.CAMERA)
         }
     }
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    // The camera takes longer to restart than the slide back from the journal, so until it streams again the preview
+    // shows the last frame it had instead of a black hole.
+    var waitingForCamera by remember { mutableStateOf(true) }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 granted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
             }
+            if (event == Lifecycle.Event.ON_PAUSE) LastPreviewFrame.keep(previewView)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -168,10 +182,25 @@ fun CaptureScreen(
                             setScreenFlashWindow(activity?.window)
                             this.controller = controller
                             scaleType = PreviewView.ScaleType.FILL_CENTER
+                            previewView = this
                         }
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
+                DisposableEffect(previewView) {
+                    val view = previewView ?: return@DisposableEffect onDispose {}
+                    val streaming = Observer<PreviewView.StreamState> { if (it == PreviewView.StreamState.STREAMING) waitingForCamera = false }
+                    view.previewStreamState.observeForever(streaming)
+                    onDispose { view.previewStreamState.removeObserver(streaming) }
+                }
+                val lastFrame = LastPreviewFrame.image
+                val lastFrameAlpha by animateFloatAsState(if (waitingForCamera) 1f else 0f, tween(180), label = "lastFrame")
+                if (lastFrame != null && lastFrameAlpha > 0f) {
+                    Image(
+                        lastFrame, contentDescription = null, contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = lastFrameAlpha },
+                    )
+                }
                 Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     CircleIconButton(
                         if (flashOn) JournalIcons.FlashOn else JournalIcons.FlashOff,
@@ -262,6 +291,19 @@ internal fun Modifier.swipeUpToOpen(onOpen: () -> Unit): Modifier = pointerInput
             }
             if (!change.pressed) return@awaitEachGesture
         }
+    }
+}
+
+/** The preview's last frame, kept in memory only, to stand in while the camera restarts. */
+private object LastPreviewFrame {
+    var image: ImageBitmap? = null
+        private set
+
+    fun keep(view: PreviewView?) {
+        // Half size is plenty for a frame that is on screen for a few hundred milliseconds.
+        val frame = view?.takeIf { it.width > 0 && it.height > 0 }?.bitmap ?: return
+        image = Bitmap.createScaledBitmap(frame, frame.width / 2, frame.height / 2, true).asImageBitmap()
+        frame.recycle()
     }
 }
 
