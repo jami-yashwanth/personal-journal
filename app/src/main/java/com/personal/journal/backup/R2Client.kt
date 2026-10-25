@@ -20,7 +20,11 @@ enum class BackupErrorKind(val message: String) {
     UNKNOWN("R2 returned an unexpected error."),
 }
 
-class BackupException(val kind: BackupErrorKind, cause: Throwable? = null) : IOException(kind.message, cause)
+class BackupException(val kind: BackupErrorKind, cause: Throwable? = null) : IOException(kind.message, cause) {
+    /** Wording for setup and restore, where the user is typing the details right now. */
+    fun setupMessage(): String =
+        if (kind == BackupErrorKind.NETWORK) "Couldn't reach R2. Check the Account ID and your internet connection." else kind.message
+}
 
 /** The four object operations backup needs; R2Client is the real one, tests use an in-memory fake. */
 interface ObjectStore {

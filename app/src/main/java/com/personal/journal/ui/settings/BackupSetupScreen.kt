@@ -90,7 +90,7 @@ class BackupSetupViewModel(val manager: BackupManager) : ViewModel() {
         try {
             block()
         } catch (e: BackupException) {
-            error = e.kind.message
+            error = e.setupMessage()
         } catch (e: WrongPhraseException) {
             error = e.message
         } catch (e: InvalidPhraseException) {

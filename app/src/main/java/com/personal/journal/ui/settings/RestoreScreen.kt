@@ -84,7 +84,7 @@ class RestoreViewModel(
         } catch (e: InvalidPhraseException) {
             error = e.message
         } catch (e: BackupException) {
-            error = e.kind.message
+            error = e.setupMessage()
         } finally {
             running = false
         }
