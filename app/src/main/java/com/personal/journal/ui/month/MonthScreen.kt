@@ -169,7 +169,7 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
             tile.placed.size == TileSize.LARGE -> 12.sp
             else -> 11.sp
         }
-        // Notes go on top of the prints, so a note that lands on a photo stays readable.
+        // Notes go on top of the prints, as loose lines with no backing.
         tile.items.zip(spots).sortedBy { (item, _) -> item is TileItem.Note }.forEach { (item, cell) ->
             // Words need more width than a print; a note spreads around its spot and may lie across a neighbour.
             val spot = if (item is TileItem.Note) cell.widened(1.6f, max = 0.92f) else cell
@@ -195,7 +195,7 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
                         ),
                         color = JournalColors.TextSecondary,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.clip(PrintShape).background(JournalColors.Surface).padding(horizontal = 4.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                     )
                 }
             }
