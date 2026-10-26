@@ -28,12 +28,13 @@ object DebugSeeder {
         Shot(0xFF7A838D.toInt(), 0xFF2B3137.toInt(), 0x30FFFFFF),
     )
 
-    private fun photo(i: Int): ByteArrayInputStream {
+    private fun photo(i: Int, portrait: Boolean = false): ByteArrayInputStream {
         val s = scenes[i % scenes.size]
-        val bmp = Bitmap.createBitmap(1200, 900, Bitmap.Config.ARGB_8888)
+        val (w, h) = if (portrait) 900f to 1200f else 1200f to 900f
+        val bmp = Bitmap.createBitmap(w.toInt(), h.toInt(), Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
-        c.drawRect(0f, 0f, 1200f, 900f, Paint().apply { shader = LinearGradient(0f, 0f, 0f, 900f, s.top, s.bottom, Shader.TileMode.CLAMP) })
-        c.drawCircle(780f, 360f, 320f, Paint().apply { shader = RadialGradient(780f, 360f, 320f, s.glow, 0, Shader.TileMode.CLAMP) })
+        c.drawRect(0f, 0f, w, h, Paint().apply { shader = LinearGradient(0f, 0f, 0f, h, s.top, s.bottom, Shader.TileMode.CLAMP) })
+        c.drawCircle(w * 0.65f, h * 0.4f, 320f, Paint().apply { shader = RadialGradient(w * 0.65f, h * 0.4f, 320f, s.glow, 0, Shader.TileMode.CLAMP) })
         val out = ByteArrayOutputStream()
         bmp.compress(Bitmap.CompressFormat.JPEG, 90, out)
         return ByteArrayInputStream(out.toByteArray())
@@ -43,19 +44,19 @@ object DebugSeeder {
         val today = LocalDate.now(zone)
         fun at(daysAgo: Long, h: Int, m: Int) = today.minusDays(daysAgo).atTime(LocalTime.of(h, m)).atZone(zone).toInstant().toEpochMilli()
         var i = 0
-        suspend fun p(daysAgo: Long, h: Int, m: Int, caption: String? = null, vararg tags: String) =
-            repo.savePhoto(photo(i++), caption, tags.toList(), at(daysAgo, h, m), DateSource.CAMERA)
+        suspend fun p(daysAgo: Long, h: Int, m: Int, caption: String? = null, vararg tags: String, portrait: Boolean = false) =
+            repo.savePhoto(photo(i++, portrait), caption, tags.toList(), at(daysAgo, h, m), DateSource.CAMERA)
         suspend fun t(daysAgo: Long, h: Int, m: Int, text: String, vararg tags: String) =
             repo.saveText(text, tags.toList(), at(daysAgo, h, m))
 
         p(0, 8, 42, "First coffee before standup. Office was still empty.", "office")
         t(0, 13, 15, "Lunch with Ravi and Meera at the dosa place near the station. Ravi finally said yes to the Coorg trip in December, so now someone has to actually book it.")
-        p(0, 18, 30, null, "badminton")
+        p(0, 18, 30, null, "badminton", portrait = true)
         t(1, 11, 20, "Slow Saturday. Cleaned the flat, did laundry, and finally replaced the kitchen bulb that's been dead since August.")
         p(2, 19, 5, "Dinner with the team.")
         p(3, 21, 40, null, "gym")
         t(4, 18, 0, "Interview went better than I expected. They asked about the side projects first.", "office")
-        repeat(4) { p(6, 9 + it, 10, if (it == 0) "Sunday cricket at the ground." else null, "cricket") }
+        repeat(4) { p(6, 9 + it, 10, if (it == 0) "Sunday cricket at the ground." else null, "cricket", portrait = it == 2) }
         p(7, 7, 30, null, "gym")
         p(9, 7, 15, null, "gym")
         t(10, 20, 0, "Rain all day. Stayed in.")
