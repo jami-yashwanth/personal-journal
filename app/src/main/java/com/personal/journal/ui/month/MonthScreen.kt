@@ -47,6 +47,13 @@ import com.personal.journal.ui.components.TagChip
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
 import java.io.File
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
+import com.personal.journal.bento.Spot
+import com.personal.journal.bento.scatter
+import androidx.compose.runtime.remember
 
 @Composable
 fun MonthScreen(
@@ -130,60 +137,78 @@ private val RoundedFab = androidx.compose.foundation.shape.RoundedCornerShape(18
 
 @Composable
 private fun Tile(tile: TileUi, photoFile: (String) -> File, onClick: () -> Unit) {
-    val modifier = Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }.clip(JournalShapes.tile)
-        .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}", onClick = onClick)
-    if (tile.thumbs.isEmpty()) {
-        Column(modifier.background(JournalColors.Surface).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (tile.isToday) DateLabel(tile.label, emphasised = true)
-            else Text(tile.label, style = MaterialTheme.typography.titleMedium, color = JournalColors.TextPrimary)
+    Box(
+        Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }.clip(JournalShapes.tile)
+            .background(JournalColors.Surface)
+            .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}", onClick = onClick),
+    ) {
+        Scrapbook(tile, photoFile)
+        if (tile.hiddenCount > 0) {
             Text(
-                tile.firstText.orEmpty(),
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = null),
-                color = JournalColors.TextMuted,
-                overflow = TextOverflow.Ellipsis,
+                "+${tile.hiddenCount}",
+                style = MaterialTheme.typography.labelSmall,
+                color = JournalColors.TextPrimary,
+                modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).clip(JournalShapes.pill).background(JournalColors.Scrim)
+                    .padding(horizontal = 7.dp, vertical = 2.dp),
             )
         }
-        return
-    }
-    Box(modifier.background(JournalColors.Background)) {
-        TileMosaic(tile, photoFile)
-        DateLabel(tile.label, emphasised = tile.isToday, modifier = Modifier.align(Alignment.BottomStart).padding(10.dp))
+        DateLabel(tile.label, emphasised = tile.isToday, modifier = Modifier.align(Alignment.BottomStart).padding(8.dp))
     }
 }
 
+/** The day's photos as small prints and its notes as loose lines, dropped on the tile the same way every time. */
 @Composable
-private fun TileMosaic(tile: TileUi, photoFile: (String) -> File) {
-    @Composable
-    fun Photo(path: String, m: Modifier) =
-        AsyncImage(photoFile(path), contentDescription = null, contentScale = ContentScale.Crop, modifier = m.background(JournalColors.Surface))
-
-    @Composable
-    fun TextCell(m: Modifier) = Box(m.background(JournalColors.SurfaceRaised).padding(9.dp)) {
-        Text(tile.firstText.orEmpty(), style = MaterialTheme.typography.labelSmall, color = JournalColors.TextMuted, overflow = TextOverflow.Ellipsis)
-    }
-    val thumbs = tile.thumbs
-    val size = tile.placed.size
-    when {
-        size == TileSize.SMALL || (thumbs.size == 1 && tile.firstText == null) -> Photo(thumbs[0], Modifier.fillMaxSize())
-        size == TileSize.WIDE -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Photo(thumbs[0], Modifier.weight(1f).fillMaxSize())
-            if (thumbs.size > 1) Photo(thumbs[1], Modifier.weight(1f).fillMaxSize()) else TextCell(Modifier.weight(1f).fillMaxSize())
+private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
+    // The bottom stays clear for the date label.
+    BoxWithConstraints(Modifier.fillMaxSize().padding(start = 7.dp, top = 7.dp, end = 7.dp, bottom = 26.dp)) {
+        val spots = remember(tile.placed.localDate, tile.items.size, maxWidth, maxHeight) {
+            scatter(tile.items.size, aspect = maxWidth / maxHeight, seed = tile.placed.localDate.hashCode())
         }
-        else -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Photo(thumbs[0], Modifier.weight(1f).fillMaxSize())
-            Column(Modifier.weight(1f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                val second = thumbs.getOrNull(1)
-                if (second != null) Photo(second, Modifier.weight(1f).fillMaxSize()) else TextCell(Modifier.weight(1f).fillMaxSize())
-                val third = thumbs.getOrNull(2)
-                when {
-                    third != null -> Photo(third, Modifier.weight(1f).fillMaxSize())
-                    tile.firstText != null && second != null -> TextCell(Modifier.weight(1f).fillMaxSize())
-                    else -> Box(Modifier.weight(1f).fillMaxSize().background(JournalColors.Surface))
+        val noteSize = when {
+            tile.items.size == 1 -> 14.sp
+            tile.placed.size == TileSize.LARGE -> 12.sp
+            else -> 11.sp
+        }
+        // Notes go on top of the prints, so a note that lands on a photo stays readable.
+        tile.items.zip(spots).sortedBy { (item, _) -> item is TileItem.Note }.forEach { (item, cell) ->
+            // Words need more width than a print; a note spreads around its spot and may lie across a neighbour.
+            val spot = if (item is TileItem.Note) cell.widened(1.6f, max = 0.92f) else cell
+            val placed = Modifier.offset(maxWidth * spot.x, maxHeight * spot.y)
+                .size(maxWidth * spot.width, maxHeight * spot.height)
+                .graphicsLayer { rotationZ = spot.rotation }
+            when (item) {
+                is TileItem.Photo -> Box(
+                    placed.clip(PrintShape).background(JournalColors.Paper).padding(start = 3.dp, top = 3.dp, end = 3.dp, bottom = 8.dp),
+                ) {
+                    AsyncImage(
+                        photoFile(item.thumb), contentDescription = null, contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().background(JournalColors.SurfaceRaised),
+                    )
+                }
+                is TileItem.Note -> Box(placed, contentAlignment = Alignment.CenterStart) {
+                    Text(
+                        item.text,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Serif,
+                            fontSize = noteSize,
+                            lineHeight = noteSize * 1.35f,
+                        ),
+                        color = JournalColors.TextSecondary,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clip(PrintShape).background(JournalColors.Surface).padding(horizontal = 4.dp, vertical = 2.dp),
+                    )
                 }
             }
         }
     }
 }
+
+private fun Spot.widened(factor: Float, max: Float): Spot {
+    val w = (width * factor).coerceAtMost(max).coerceAtLeast(width)
+    return copy(x = (x + width / 2 - w / 2).coerceIn(0f, 1 - w), width = w)
+}
+
+private val PrintShape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
 
 @Composable
 private fun EmptyMonth(isCurrentMonth: Boolean, onCapture: () -> Unit, onWrite: () -> Unit, onRestore: () -> Unit) {

@@ -57,8 +57,35 @@ class MonthStateTest {
         assertEquals("2026-10-25", today.placed.localDate)
         assertEquals(TileSize.LARGE, today.placed.size)
         assertEquals("Today, 25", today.label)
-        assertEquals(2, today.thumbs.size)
-        assertEquals("Lunch", today.firstText)
+        assertEquals(listOf(TileItem.Photo("thumbs/e1.jpg"), TileItem.Note("Lunch"), TileItem.Photo("thumbs/e2.jpg")), today.items)
+        assertEquals(0, today.hiddenCount)
+    }
+
+    @Test
+    fun notesAreNotCrowdedOutByPhotos() {
+        val day = (1..5).map { e(3) } + e(3, photo = false, text = "Hike to the falls")
+        val tile = buildMonthUi(october, day, "2026-10-25", null, emptyList()).tiles.single()
+        assertEquals(TileSize.LARGE, tile.placed.size)
+        assertEquals(TileItem.Note("Hike to the falls"), tile.items[1])
+    }
+
+    @Test
+    fun captionsShowAsNotes() {
+        val tile = buildMonthUi(october, listOf(e(7, text = "Sunday cricket")), "2026-10-25", null, emptyList()).tiles.single()
+        assertEquals(listOf(TileItem.Photo("thumbs/e${n}.jpg"), TileItem.Note("Sunday cricket")), tile.items)
+    }
+
+    @Test
+    fun tilesShowWhatFitsAndCountTheRest() {
+        val small = buildMonthUi(october, listOf(e(5), e(5, photo = false, text = "a"), e(5, photo = false, text = "b")), "2026-10-25", null, emptyList())
+            .tiles.single()
+        assertEquals(TileSize.SMALL, small.placed.size)
+        assertEquals(2, small.items.size)
+        assertEquals(1, small.hiddenCount)
+
+        val large = buildMonthUi(october, (1..9).map { e(6) }, "2026-10-25", null, emptyList()).tiles.single()
+        assertEquals(6, large.items.size)
+        assertEquals(3, large.hiddenCount)
     }
 
     @Test

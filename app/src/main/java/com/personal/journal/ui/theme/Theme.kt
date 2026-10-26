@@ -20,6 +20,8 @@ object JournalColors {
     val DestructiveIcon = Color(0xFFE58A80)
     val Hairline = Color(0xFF2A2A2A)
     val Scrim = Color(0xB3121212)
+    /** The off-white border of a photo print on the month tiles. */
+    val Paper = Color(0xFFE8E4DC)
 }
 
 object JournalShapes {

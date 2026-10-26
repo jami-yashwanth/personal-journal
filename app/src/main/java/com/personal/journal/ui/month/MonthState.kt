@@ -2,15 +2,23 @@ package com.personal.journal.ui.month
 
 import com.personal.journal.bento.DaySummary
 import com.personal.journal.bento.PlacedTile
+import com.personal.journal.bento.TileSize
 import com.personal.journal.bento.pack
 import com.personal.journal.data.db.EntryType
 import com.personal.journal.data.db.EntryWithTags
 import java.time.YearMonth
 
+/** One thing shown on a day's tile. */
+sealed interface TileItem {
+    data class Photo(val thumb: String) : TileItem
+    data class Note(val text: String) : TileItem
+}
+
 data class TileUi(
     val placed: PlacedTile,
-    val thumbs: List<String>,
-    val firstText: String?,
+    val items: List<TileItem>,
+    /** Entries that didn't fit on the tile; opening the day shows them. */
+    val hiddenCount: Int,
     val dimmed: Boolean,
     val isToday: Boolean,
     val label: String,
@@ -26,6 +34,19 @@ data class MonthUiState(
     val isEmpty: Boolean,
     val isCurrentMonth: Boolean,
 )
+
+private fun capacity(size: TileSize) = when (size) {
+    TileSize.SMALL -> 2
+    TileSize.WIDE -> 3
+    TileSize.LARGE -> 6
+}
+
+/** Photos and notes (written entries and photo captions) take turns, so a photo-heavy day still shows its words. */
+private fun interleave(list: List<EntryWithTags>): List<TileItem> {
+    val photos = list.mapNotNull { it.entry.thumbFile }.map { TileItem.Photo(it) }
+    val notes = list.mapNotNull { it.entry.text?.takeIf(String::isNotBlank) }.map { TileItem.Note(it) }
+    return List(maxOf(photos.size, notes.size)) { i -> listOfNotNull(photos.getOrNull(i), notes.getOrNull(i)) }.flatten()
+}
 
 private fun count(n: Int, one: String, many: String) = "$n ${if (n == 1) one else many}"
 
@@ -46,10 +67,13 @@ fun buildMonthUi(
     val placed = pack(summaries).associateBy { it.localDate }
     val tiles = byDay.map { (date, list) ->
         val day = date.substring(8).trimStart('0')
+        val tile = placed.getValue(date)
+        val items = interleave(list)
+        val shown = items.take(capacity(tile.size))
         TileUi(
-            placed = placed.getValue(date),
-            thumbs = list.mapNotNull { it.entry.thumbFile }.take(3),
-            firstText = list.firstOrNull { it.entry.type == EntryType.TEXT }?.entry?.text,
+            placed = tile,
+            items = shown,
+            hiddenCount = items.size - shown.size,
             dimmed = activeTag != null && list.none { e -> e.tags.any { it.name == activeTag } },
             isToday = date == today,
             label = if (date == today) "Today, $day" else day,
