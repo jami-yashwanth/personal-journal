@@ -1,5 +1,7 @@
 package com.personal.journal.ui.day
 
+import androidx.compose.ui.unit.sp
+import com.personal.journal.ui.theme.handwriting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -99,7 +101,7 @@ private fun EntryCard(e: EntryWithTags, photoFile: (String) -> File, modifier: M
                         val isText = entry.type == EntryType.TEXT
                         Text(
                             it,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = handwriting(19.sp),
                             color = if (isText) JournalColors.TextSecondary.copy(alpha = 1f) else JournalColors.TextPrimary,
                             maxLines = if (isText) 3 else Int.MAX_VALUE,
                             overflow = TextOverflow.Ellipsis,

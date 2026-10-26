@@ -1,5 +1,6 @@
 package com.personal.journal.ui.theme
 
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -17,10 +18,14 @@ private fun geist(weight: FontWeight) = Font(
 
 val Geist = FontFamily(geist(FontWeight.Normal), geist(FontWeight.Medium), geist(FontWeight.SemiBold))
 
-/** Handwriting for the user's own words on the month tiles. */
+/** Handwriting for the user's own words: notes and captions, wherever they are shown (not where they are typed). */
 val Caveat = FontFamily(
     Font(R.font.caveat, weight = FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
 )
+
+/** The user's words in Caveat. Handwriting runs small, so callers pick a size a step above the body text it replaces. */
+fun handwriting(size: TextUnit, line: Float = 1.2f) =
+    TextStyle(fontFamily = Caveat, fontWeight = FontWeight.Medium, fontSize = size, lineHeight = size * line)
 
 private fun style(size: Int, weight: FontWeight, line: Float = 1.4f) =
     TextStyle(fontFamily = Geist, fontSize = size.sp, fontWeight = weight, lineHeight = (size * line).sp)

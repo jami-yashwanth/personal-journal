@@ -1,5 +1,6 @@
 package com.personal.journal.ui.month
 
+import com.personal.journal.ui.theme.handwriting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -44,13 +45,11 @@ import com.personal.journal.ui.components.DateLabel
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.components.TagChip
-import com.personal.journal.ui.theme.Caveat
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
 import java.io.File
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.personal.journal.bento.Spot
 import com.personal.journal.bento.scatter
@@ -190,12 +189,7 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
                 is TileItem.Note -> Box(placed, contentAlignment = Alignment.CenterStart) {
                     Text(
                         item.text,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontFamily = Caveat,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = noteSize,
-                            lineHeight = noteSize * 1.1f,
-                        ),
+                        style = handwriting(noteSize, line = 1.1f),
                         color = JournalColors.TextSecondary,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
