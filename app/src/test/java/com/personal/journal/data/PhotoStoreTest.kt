@@ -55,6 +55,42 @@ class PhotoStoreTest {
         assertTrue(orientation == ExifInterface.ORIENTATION_NORMAL || orientation == ExifInterface.ORIENTATION_UNDEFINED)
     }
 
+    /**
+     * Every EXIF orientation, including the mirrored ones the front camera writes, must come out upright: each source
+     * is laid out so that, displayed as its tag says, it is 200x100 with a red top-left quarter.
+     */
+    @Test
+    fun savesEveryOrientationUpright() = runTest {
+        // Orientation tag to where the red quarter sits in the stored (raw) pixels, and whether width/height swap.
+        val cases = mapOf(
+            ExifInterface.ORIENTATION_NORMAL to Triple(false, false, false),
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL to Triple(true, false, false),
+            ExifInterface.ORIENTATION_ROTATE_180 to Triple(true, true, false),
+            ExifInterface.ORIENTATION_FLIP_VERTICAL to Triple(false, true, false),
+            ExifInterface.ORIENTATION_TRANSPOSE to Triple(false, false, true),
+            ExifInterface.ORIENTATION_ROTATE_90 to Triple(false, true, true),
+            ExifInterface.ORIENTATION_TRANSVERSE to Triple(true, true, true),
+            ExifInterface.ORIENTATION_ROTATE_270 to Triple(true, false, true),
+        )
+        for ((orientation, layout) in cases) {
+            val (right, bottom, swapped) = layout
+            val (w, h) = if (swapped) 100 to 200 else 200 to 100
+            val raw = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.GRAY) }
+            for (x in 0 until w / 2) for (y in 0 until h / 2) {
+                raw.setPixel(if (right) w - 1 - x else x, if (bottom) h - 1 - y else y, Color.RED)
+            }
+            val src = tmp.newFile()
+            src.outputStream().use { raw.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+            ExifInterface(src).apply { setAttribute(ExifInterface.TAG_ORIENTATION, orientation.toString()); saveAttributes() }
+
+            val saved = src.inputStream().use { store.save("o$orientation", it) }
+            val out = BitmapFactory.decodeFile(store.file(saved.photoFile).path)
+            assertEquals("size for orientation $orientation", 200 to 100, out.width to out.height)
+            assertTrue("red top-left for orientation $orientation", Color.red(out.getPixel(25, 12)) > 180 && Color.green(out.getPixel(25, 12)) < 90)
+            assertTrue("grey bottom-right for orientation $orientation", Color.green(out.getPixel(175, 87)) > 90)
+        }
+    }
+
     @Test
     fun resizesToMax2560() = runTest {
         val saved = jpeg(4000, 3000).inputStream().use { store.save("b", it) }

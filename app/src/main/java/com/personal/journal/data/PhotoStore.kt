@@ -38,11 +38,12 @@ class PhotoStore(private val filesDir: File) {
         try {
             src.outputStream().use { source.copyTo(it) }
             val exif = runCatching { ExifInterface(src) }.getOrNull()
-            val rotation = exif?.rotationDegrees ?: 0
+            val orientation = exif?.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                ?: ExifInterface.ORIENTATION_NORMAL
             val exifDate = exif?.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
                 ?: exif?.getAttribute(ExifInterface.TAG_DATETIME)
 
-            val full = decodeUpright(src, MAX_EDGE, rotation)
+            val full = decodeUpright(src, MAX_EDGE, orientation)
             val thumb = scaleToFit(full, THUMB_EDGE)
             writeAtomically(full, File(photos, "$id.jpg"))
             writeAtomically(thumb, File(thumbs, "$id.jpg"))
@@ -71,7 +72,7 @@ class PhotoStore(private val filesDir: File) {
         return removed
     }
 
-    private fun decodeUpright(src: File, maxEdge: Int, rotation: Int): Bitmap {
+    private fun decodeUpright(src: File, maxEdge: Int, orientation: Int): Bitmap {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(src.path, bounds)
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw UnreadablePhotoException()
@@ -79,11 +80,26 @@ class PhotoStore(private val filesDir: File) {
         while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxEdge) sample *= 2
         val decoded = BitmapFactory.decodeFile(src.path, BitmapFactory.Options().apply { inSampleSize = sample })
             ?: throw UnreadablePhotoException()
-        val rotated = if (rotation == 0) decoded else {
-            Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, Matrix().apply { postRotate(rotation.toFloat()) }, true)
-                .also { decoded.recycle() }
+        val upright = uprightMatrix(orientation)
+        val rotated = if (upright == null) decoded else {
+            Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, upright, true).also { decoded.recycle() }
         }
         return scaleToFit(rotated, maxEdge).also { if (it !== rotated) rotated.recycle() }
+    }
+
+    /**
+     * The transform that shows a photo the way its EXIF orientation says. The mirrored orientations matter: the front
+     * camera tags selfies as flipped so they match the mirrored preview, and rotating them alone turns them upside down.
+     */
+    private fun uprightMatrix(orientation: Int): Matrix? = when (orientation) {
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> Matrix().apply { setScale(-1f, 1f) }
+        ExifInterface.ORIENTATION_ROTATE_180 -> Matrix().apply { setRotate(180f) }
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> Matrix().apply { setRotate(180f); postScale(-1f, 1f) }
+        ExifInterface.ORIENTATION_TRANSPOSE -> Matrix().apply { setRotate(90f); postScale(-1f, 1f) }
+        ExifInterface.ORIENTATION_ROTATE_90 -> Matrix().apply { setRotate(90f) }
+        ExifInterface.ORIENTATION_TRANSVERSE -> Matrix().apply { setRotate(-90f); postScale(-1f, 1f) }
+        ExifInterface.ORIENTATION_ROTATE_270 -> Matrix().apply { setRotate(-90f) }
+        else -> null
     }
 
     private fun scaleToFit(bmp: Bitmap, maxEdge: Int): Bitmap {
