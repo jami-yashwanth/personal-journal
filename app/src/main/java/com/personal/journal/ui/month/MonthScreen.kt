@@ -44,12 +44,13 @@ import com.personal.journal.ui.components.DateLabel
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.components.TagChip
+import com.personal.journal.ui.theme.Caveat
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
 import java.io.File
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.personal.journal.bento.Spot
 import com.personal.journal.bento.scatter
@@ -164,10 +165,11 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
         val spots = remember(tile.placed.localDate, tile.items.size, maxWidth, maxHeight) {
             scatter(tile.items.size, aspect = maxWidth / maxHeight, seed = tile.placed.localDate.hashCode())
         }
+        // Handwriting runs small, so notes are set larger than body text.
         val noteSize = when {
-            tile.items.size == 1 -> 14.sp
-            tile.placed.size == TileSize.LARGE -> 12.sp
-            else -> 11.sp
+            tile.items.size == 1 -> 18.sp
+            tile.placed.size == TileSize.LARGE -> 16.sp
+            else -> 14.sp
         }
         // Notes go on top of the prints, as loose lines with no backing.
         tile.items.zip(spots).sortedBy { (item, _) -> item is TileItem.Note }.forEach { (item, cell) ->
@@ -189,9 +191,10 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
                     Text(
                         item.text,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = Caveat,
+                            fontWeight = FontWeight.Medium,
                             fontSize = noteSize,
-                            lineHeight = noteSize * 1.35f,
+                            lineHeight = noteSize * 1.1f,
                         ),
                         color = JournalColors.TextSecondary,
                         overflow = TextOverflow.Ellipsis,

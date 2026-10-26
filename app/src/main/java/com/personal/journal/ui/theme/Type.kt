@@ -17,6 +17,11 @@ private fun geist(weight: FontWeight) = Font(
 
 val Geist = FontFamily(geist(FontWeight.Normal), geist(FontWeight.Medium), geist(FontWeight.SemiBold))
 
+/** Handwriting for the user's own words on the month tiles. */
+val Caveat = FontFamily(
+    Font(R.font.caveat, weight = FontWeight.Medium, variationSettings = FontVariation.Settings(FontVariation.weight(500))),
+)
+
 private fun style(size: Int, weight: FontWeight, line: Float = 1.4f) =
     TextStyle(fontFamily = Geist, fontSize = size.sp, fontWeight = weight, lineHeight = (size * line).sp)
 
