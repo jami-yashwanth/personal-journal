@@ -1,5 +1,6 @@
 package com.personal.journal.ui.entry
 
+import android.app.Activity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +43,16 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.personal.journal.data.db.EntryType
@@ -70,6 +76,8 @@ import com.personal.journal.ui.dayTitle
 import com.personal.journal.ui.timeLabel
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.math.abs
+import kotlin.math.min
 
 private const val HERO_ASPECT = 300f / 430f
 
@@ -104,6 +112,8 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
         value = tintCache.tint(shown.entry.id, shown.entry.thumbFile?.let(photoFile), dark)
     }
     val background by animateColorAsState(shownColour?.fill ?: tint ?: JournalColors.Background, label = "entry background")
+    // 0.25 sits just above the point where dark and white icons contrast equally, so mid pastels get dark icons
+    StatusBarIcons(light = background.luminance() > 0.25f)
     val headerInk = shownColour?.onFill ?: JournalColors.TextSecondary
 
     Box(Modifier.fillMaxSize().background(background)) {
@@ -132,7 +142,9 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
                 ) { page ->
                     val item = day[page]
                     val colour = item.colourOrNull()
-                    if (colour == null) PhotoPage(item, photoFile) else TextPage(item, colour)
+                    // text belongs to the settled page; in a side peek only the card shows
+                    val textAlpha = 1f - min(1f, abs(pager.currentPage - page + pager.currentPageOffsetFraction))
+                    if (colour == null) PhotoPage(item, photoFile, textAlpha) else TextPage(item, colour, textAlpha)
                 }
             } else {
                 val tagState by editing.state.collectAsStateWithLifecycle()
@@ -201,7 +213,7 @@ private fun EntryWithTags.colourOrNull(): TagColour? =
 
 /** Day and time, the photo as a 300×430 hero, and the caption clamped to three lines until tapped. */
 @Composable
-private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
+private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlpha: Float) {
     val entry = item.entry
     var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
     var overflows by remember(entry.id) { mutableStateOf(false) }
@@ -209,10 +221,13 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = DockClearance),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(dayTitle(entry.localDate), style = MaterialTheme.typography.displayLarge, color = JournalColors.TextPrimary, maxLines = 1)
+        Text(
+            dayTitle(entry.localDate), style = MaterialTheme.typography.displayLarge, color = JournalColors.TextPrimary, maxLines = 1,
+            modifier = Modifier.graphicsLayer { alpha = textAlpha },
+        )
         Text(
             timeLabel(entry.takenAt), style = MaterialTheme.typography.bodySmall, color = JournalColors.TextSecondary,
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = 6.dp).graphicsLayer { alpha = textAlpha },
         )
         Box(
             Modifier
@@ -241,6 +256,7 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
                 // only a caption cut short by the clamp is worth tapping
                 onTextLayout = { if (!expanded) overflows = it.hasVisualOverflow },
                 modifier = Modifier
+                    .graphicsLayer { alpha = textAlpha }
                     .padding(top = 24.dp, start = 4.dp, end = 4.dp)
                     .then(
                         if (expanded || overflows) {
@@ -254,7 +270,7 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
 
 /** A text entry as a big index card in its tag colour; long text scrolls inside it. */
 @Composable
-private fun TextPage(item: EntryWithTags, colour: TagColour) {
+private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: Float) {
     val entry = item.entry
     Column(
         Modifier
@@ -265,7 +281,7 @@ private fun TextPage(item: EntryWithTags, colour: TagColour) {
             .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = DockClearance),
     ) {
         Row(
-            Modifier.horizontalScroll(rememberScrollState()),
+            Modifier.graphicsLayer { alpha = textAlpha }.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -279,8 +295,29 @@ private fun TextPage(item: EntryWithTags, colour: TagColour) {
             entry.text.orEmpty(),
             style = MaterialTheme.typography.headlineLarge,
             color = colour.onFill,
-            modifier = Modifier.padding(top = 22.dp),
+            modifier = Modifier.padding(top = 22.dp).graphicsLayer { alpha = textAlpha },
         )
+    }
+}
+
+/** Dark status and navigation icons on a light page, light ones on a dark page; the theme's own are restored on leaving. */
+@Composable
+private fun StatusBarIcons(light: Boolean) {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    val window = (view.context as Activity).window
+    val controller = remember(window, view) { WindowCompat.getInsetsController(window, view) }
+    val original = remember(controller) { controller.isAppearanceLightStatusBars to controller.isAppearanceLightNavigationBars }
+    DisposableEffect(light) {
+        controller.isAppearanceLightStatusBars = light
+        controller.isAppearanceLightNavigationBars = light
+        onDispose { }
+    }
+    DisposableEffect(controller) {
+        onDispose {
+            controller.isAppearanceLightStatusBars = original.first
+            controller.isAppearanceLightNavigationBars = original.second
+        }
     }
 }
 
