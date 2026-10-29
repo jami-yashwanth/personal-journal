@@ -79,7 +79,7 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
                 ) { Text(whenLabel(vm.takenAt), style = MaterialTheme.typography.bodySmall, color = JournalColors.TextSecondary) }
             }
             // Balances the close button so the date chip sits centred.
-            Spacer(Modifier.size(46.dp))
+            Spacer(Modifier.size(48.dp))
         }
         BasicTextField(
             value = vm.text,

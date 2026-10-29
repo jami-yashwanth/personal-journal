@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -29,14 +31,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.components.SoftButton
 import com.personal.journal.ui.components.TagRow
 import com.personal.journal.ui.theme.JournalColors
+import com.personal.journal.ui.whenLabel
 import kotlinx.coroutines.launch
 
 private val PhotoShape = RoundedCornerShape(36.dp)
@@ -58,7 +67,16 @@ fun ReviewScreen(vm: ReviewViewModel, onDone: () -> Unit, onRetake: () -> Unit) 
     Column(
         Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding().imePadding(),
     ) {
-        Box(Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 14.dp).clip(PhotoShape)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            CircleIconButton(JournalIcons.Close, "Discard and retake", ::retake)
+            Text(
+                whenLabel(vm.takenAt), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+                color = JournalColors.TextMuted, textAlign = TextAlign.Center,
+            )
+            // Balances the close button so the date stays centred.
+            Spacer(Modifier.size(48.dp))
+        }
+        Box(Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp).clip(PhotoShape)) {
             AsyncImage(
                 model = vm.photo,
                 contentDescription = "Photo just taken",
@@ -73,7 +91,7 @@ fun ReviewScreen(vm: ReviewViewModel, onDone: () -> Unit, onRetake: () -> Unit) 
                 textStyle = MaterialTheme.typography.titleLarge.copy(color = JournalColors.TextPrimary),
                 cursorBrush = SolidColor(JournalColors.Action),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).semantics { contentDescription = "Caption" },
                 decorationBox = { inner ->
                     if (caption.isEmpty()) {
                         Text("Add a line about this…", style = MaterialTheme.typography.titleLarge, color = JournalColors.TextMuted)
