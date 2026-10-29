@@ -17,6 +17,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import com.personal.journal.ui.motion.NavMotion
+import com.personal.journal.ui.motion.LocalSharedScope
+import com.personal.journal.ui.motion.NavScoped
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.runtime.CompositionLocalProvider
 import com.personal.journal.ui.motion.navMotion
 import com.personal.journal.ui.motion.navSpring
 import androidx.compose.animation.fadeOut
@@ -193,7 +197,8 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
     val container = appContainer()
     // Lives as long as the activity so Month is already loaded when it slides up over the camera.
     val monthVm = viewModel(viewModelStoreOwner = activity) { MonthViewModel(container.repository) }
-    NavHost(
+    // Shared elements fly in this layout's overlay, above whichever screens are mid-transition.
+    SharedTransitionLayout { CompositionLocalProvider(LocalSharedScope provides this) { NavHost(
         nav,
         startDestination = Routes.CAPTURE,
         modifier = Modifier.fillMaxSize().background(JournalColors.Background),
@@ -239,7 +244,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         ) {
             val status by container.settings.backupStatus.collectAsState(initial = null)
             val connected by container.backup.connected.collectAsState()
-            MonthScreen(
+            NavScoped(this) { MonthScreen(
                 vm = monthVm,
                 photoFile = container.repository::photoFile,
                 banner = backupBanner(connected, status, System.currentTimeMillis()),
@@ -249,11 +254,11 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onWrite = { nav.navigate(Routes.WRITE) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onRestore = { nav.navigate(Routes.SETTINGS) },
-            )
+            ) }
         }
         composable(Routes.DAY, arguments = listOf(navArgument("date") { type = NavType.StringType })) { e ->
             val date = e.arguments?.getString("date").orEmpty()
-            DayScreen(
+            NavScoped(this) { DayScreen(
                 vm = viewModel { DayViewModel(container.repository, date) },
                 photoFile = container.repository::photoFile,
                 onBack = { nav.popBackStack() },
@@ -261,16 +266,16 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onCamera = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
                 onImport = { container.pendingImport = it; nav.navigate(Routes.IMPORT) },
                 onWrite = { nav.navigate(Routes.WRITE) },
-            )
+            ) }
         }
         composable(Routes.ENTRY, arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
             val id = e.arguments?.getString("id").orEmpty()
-            EntryScreen(
+            NavScoped(this) { EntryScreen(
                 vm = viewModel { EntryViewModel(container.repository, id) },
                 photoFile = container.repository::photoFile,
                 tintCache = container.tintCache,
                 onBack = { nav.popBackStack() },
-            )
+            ) }
         }
         composable(Routes.IMPORT) {
             val context = LocalContext.current
@@ -315,7 +320,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onBack = { nav.popBackStack() },
             )
         }
-    }
+    } } }
 }
 
 /** Shown on the month view when backup has been failing for more than 3 days. */
