@@ -210,7 +210,7 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
 
 /** A text entry's tag colour; null for a photo, whose page takes the photo tint instead. */
 private fun EntryWithTags.colourOrNull(): TagColour? =
-    if (entry.type == EntryType.TEXT) entryColour(tags.map { it.name }) else null
+    if (entry.type == EntryType.TEXT) entryColour(tags) else null
 
 /** Day and time, the photo as a 300×430 hero, and the caption clamped to three lines until tapped. */
 @Composable

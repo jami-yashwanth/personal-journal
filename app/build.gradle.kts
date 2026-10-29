@@ -52,6 +52,9 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    // Robolectric only sees the app's merged assets, so debug carries them (a few KB, never in release).
+    sourceSets.getByName("debug").assets.srcDir("$projectDir/schemas")
 }
 
 room {

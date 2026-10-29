@@ -5,7 +5,6 @@ import com.personal.journal.data.db.DateSource
 import com.personal.journal.data.db.EntryEntity
 import com.personal.journal.data.db.EntryType
 import com.personal.journal.data.db.JournalDatabase
-import com.personal.journal.data.db.TagEntity
 import com.personal.journal.data.normalizeTag
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
@@ -77,9 +76,10 @@ class RestoreRunner(
                         backedUpAt = if (markBackedUp) e.updatedAt else null,
                     ),
                 )
+                val slots = e.tagSlots.mapKeys { (name, _) -> normalizeTag(name) }
                 val tagIds = e.tags.mapNotNull(::normalizeTag).distinct().map { name ->
                     db.tagDao().findByName(name)?.id
-                        ?: UUID.randomUUID().toString().also { db.tagDao().insert(TagEntity(it, name, useCount = 1, lastUsedAt = e.updatedAt)) }
+                        ?: db.tagDao().create(UUID.randomUUID().toString(), name, lastUsedAt = e.updatedAt, preferredSlot = slots[name]).id
                 }
                 db.tagDao().setTagsFor(e.id, tagIds)
             }

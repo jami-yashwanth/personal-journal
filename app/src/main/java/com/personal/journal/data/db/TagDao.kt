@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.personal.journal.data.nextColourSlot
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TagDao {
@@ -17,6 +19,19 @@ interface TagDao {
 
     @Update
     suspend fun update(tag: TagEntity)
+
+    @Query("SELECT colourSlot FROM tags")
+    suspend fun colourSlots(): List<Int>
+
+    /** Inserts a new tag in the next free colour slot, or [preferredSlot] when given (a restored tag keeps its colour). */
+    @Transaction
+    suspend fun create(id: String, name: String, lastUsedAt: Long, preferredSlot: Int? = null): TagEntity {
+        val slot = preferredSlot ?: nextColourSlot(colourSlots())
+        return TagEntity(id, name, useCount = 1, lastUsedAt = lastUsedAt, colourSlot = slot).also { insert(it) }
+    }
+
+    @Query("SELECT * FROM tags")
+    fun observeAll(): Flow<List<TagEntity>>
 
     @Query("DELETE FROM entry_tags WHERE entryId = :entryId")
     suspend fun clearTagsFor(entryId: String)
