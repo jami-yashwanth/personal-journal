@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,6 +45,7 @@ import com.personal.journal.ui.theme.JournalShapes
 import com.personal.journal.ui.theme.entryColour
 import com.personal.journal.ui.timeLabel
 import com.personal.journal.ui.motion.ImageKeys
+import com.personal.journal.ui.motion.besideSharedFlight
 import com.personal.journal.ui.motion.noteKey
 import com.personal.journal.ui.motion.photoKey
 import com.personal.journal.ui.motion.rememberTapHaptic
@@ -116,6 +118,8 @@ fun DayScreen(
 /** The photo at its own shape with its time on a paper sticker, and the caption underneath. */
 @Composable
 private fun PhotoTile(id: String, file: File, aspect: Float, time: String, caption: String?, imageKeys: ImageKeys, onClick: () -> Unit) {
+    // The photo takes the card's top corners, and its bottom ones too when there is no caption under it.
+    val shape = if (caption.isNullOrBlank()) JournalShapes.card else JournalShapes.card.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
     Column(
         Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card)
             .clickable(role = Role.Button, onClickLabel = "Open photo from $time", onClick = onClick),
@@ -123,10 +127,11 @@ private fun PhotoTile(id: String, file: File, aspect: Float, time: String, capti
         Box {
             AsyncImage(
                 file, contentDescription = caption ?: "Photo", contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(aspect).sharedPhoto(photoKey(id), JournalShapes.card).background(JournalColors.Sunk),
+                // Clipped here as well as by the card: in flight the photo is drawn on its own, without the card around it.
+                modifier = Modifier.fillMaxWidth().aspectRatio(aspect).sharedPhoto(photoKey(id), shape).clip(shape).background(JournalColors.Sunk),
                 onSuccess = { s -> s.result.memoryCacheKey?.let { imageKeys.put(id, it) } },
             )
-            DateLabel(time, emphasised = false, modifier = Modifier.align(Alignment.BottomStart).padding(10.dp))
+            DateLabel(time, emphasised = false, modifier = Modifier.align(Alignment.BottomStart).padding(10.dp).besideSharedFlight())
         }
         if (!caption.isNullOrBlank()) {
             Text(

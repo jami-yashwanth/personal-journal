@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -64,3 +67,15 @@ fun NavScoped(scope: AnimatedVisibilityScope, content: @Composable () -> Unit) {
 
 /** Only the page the pager has settled on takes part, so the side peeks stay put. */
 fun sharedKeyFor(page: Int, settledPage: Int, key: String): String? = key.takeIf { page == settledPage }
+
+/**
+ * For a detail drawn on top of a shared photo (a time sticker): the flying photo covers it, so it steps aside while
+ * anything is in flight and fades back once the photo has landed, instead of popping in.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.besideSharedFlight(): Modifier {
+    val flying = LocalSharedScope.current?.isTransitionActive == true
+    val alpha by animateFloatAsState(if (flying) 0f else 1f, navSpring(), label = "beside shared flight")
+    return graphicsLayer { this.alpha = alpha }
+}
