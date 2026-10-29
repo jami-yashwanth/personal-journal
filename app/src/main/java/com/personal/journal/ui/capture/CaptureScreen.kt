@@ -78,6 +78,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Observer
+import com.personal.journal.ui.motion.rememberTapHaptic
 import java.io.File
 import java.util.UUID
 
@@ -140,8 +141,11 @@ fun CaptureScreen(
 
     val launchPicker = rememberImportPicker(onImport)
 
+    val haptic = rememberTapHaptic()
+
     fun shoot() {
         if (busy || !granted) return
+        haptic()
         busy = true
         val file = File(context.cacheDir, "capture-${UUID.randomUUID()}.jpg")
         controller.takePicture(

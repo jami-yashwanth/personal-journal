@@ -43,6 +43,7 @@ import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
 import com.personal.journal.ui.theme.entryColour
 import com.personal.journal.ui.timeLabel
+import com.personal.journal.ui.motion.rememberTapHaptic
 import java.io.File
 
 /** A photo whose size can't be read is shown at this shape rather than not at all. */
@@ -64,6 +65,7 @@ fun DayScreen(
     val isEmpty = state.items.isEmpty()
     LaunchedEffect(isEmpty) { if (isEmpty) onBack() }
     val launchPicker = rememberImportPicker(onImport)
+    val haptic = rememberTapHaptic()
     Box(Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding()) {
         // Two columns, each moment in time order dropping into whichever column is shorter.
         LazyVerticalStaggeredGrid(
@@ -86,7 +88,7 @@ fun DayScreen(
             val span = if (state.items.size == 1) StaggeredGridItemSpan.FullLine else null
             items(state.items, key = { it.entry.entry.id }, span = span?.let { full -> { full } }) { item ->
                 val entry = item.entry.entry
-                val open = { onOpenEntry(entry.id) }
+                val open = { haptic(); onOpenEntry(entry.id) }
                 if (entry.type == EntryType.PHOTO && entry.photoFile != null) {
                     PhotoTile(photoFile(entry.photoFile), item.aspect ?: FALLBACK_ASPECT, timeLabel(entry.takenAt), entry.text, open)
                 } else {
