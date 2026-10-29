@@ -9,7 +9,16 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import com.personal.journal.ui.motion.NavMotion
+import com.personal.journal.ui.motion.navMotion
+import com.personal.journal.ui.motion.navSpring
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -163,6 +172,19 @@ class MainActivity : FragmentActivity() {
     }
 }
 
+/** Forward pushes come in from the right; a pop brings the previous screen back from the left. Shared hand-overs only fade, the element carries the motion. */
+private fun enterFor(motion: NavMotion, pop: Boolean): EnterTransition = when (motion) {
+    NavMotion.Push -> if (pop) slideInHorizontally(navSpring()) { -it / 4 } + fadeIn(navSpring()) else slideInHorizontally(navSpring()) { it }
+    NavMotion.Shared -> if (pop) fadeIn(navSpring()) + scaleIn(navSpring(), initialScale = 0.96f) else fadeIn(navSpring())
+    NavMotion.Sheet -> EnterTransition.None
+}
+
+private fun exitFor(motion: NavMotion, pop: Boolean): ExitTransition = when (motion) {
+    NavMotion.Push -> if (pop) slideOutHorizontally(navSpring()) { it } else slideOutHorizontally(navSpring()) { -it / 4 } + fadeOut(navSpring())
+    NavMotion.Shared -> if (pop) fadeOut(navSpring()) else fadeOut(navSpring()) + scaleOut(navSpring(), targetScale = 0.96f)
+    NavMotion.Sheet -> ExitTransition.None
+}
+
 /** Timing shared by the camera-to-journal slide, so both screens move as one. */
 private fun <T> sheet() = tween<T>(durationMillis = 320, easing = FastOutSlowInEasing)
 
@@ -175,14 +197,16 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         nav,
         startDestination = Routes.CAPTURE,
         modifier = Modifier.fillMaxSize().background(JournalColors.Background),
-        enterTransition = { fadeIn() },
-        exitTransition = { fadeOut() },
+        enterTransition = { enterFor(navMotion(initialState.destination.route, targetState.destination.route), pop = false) },
+        exitTransition = { exitFor(navMotion(initialState.destination.route, targetState.destination.route), pop = false) },
+        popEnterTransition = { enterFor(navMotion(initialState.destination.route, targetState.destination.route), pop = true) },
+        popExitTransition = { exitFor(navMotion(initialState.destination.route, targetState.destination.route), pop = true) },
     ) {
         composable(
             Routes.CAPTURE,
             // The camera lifts away as the journal rises over it, and settles back when the journal drops.
-            exitTransition = { if (targetState.destination.route == Routes.MONTH) slideOutVertically(sheet()) { -it / 4 } + fadeOut(sheet()) else fadeOut() },
-            popEnterTransition = { if (initialState.destination.route == Routes.MONTH) slideInVertically(sheet()) { -it / 4 } + fadeIn(sheet()) else fadeIn() },
+            exitTransition = { if (targetState.destination.route == Routes.MONTH) slideOutVertically(sheet()) { -it / 4 } + fadeOut(sheet()) else exitFor(NavMotion.Push, pop = false) },
+            popEnterTransition = { if (initialState.destination.route == Routes.MONTH) slideInVertically(sheet()) { -it / 4 } + fadeIn(sheet()) else enterFor(NavMotion.Push, pop = true) },
         ) {
             CaptureScreen(
                 cameraEnabled = cameraEnabled,
@@ -210,8 +234,8 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         composable(
             Routes.MONTH,
             // Swiping up from the camera pulls the journal up from below; going back drops it down again.
-            enterTransition = { if (initialState.destination.route == Routes.CAPTURE) slideInVertically(sheet()) { it } else fadeIn() },
-            popExitTransition = { if (targetState.destination.route == Routes.CAPTURE) slideOutVertically(sheet()) { it } else fadeOut() },
+            enterTransition = { if (initialState.destination.route == Routes.CAPTURE) slideInVertically(sheet()) { it } else enterFor(navMotion(initialState.destination.route, Routes.MONTH), pop = false) },
+            popExitTransition = { if (targetState.destination.route == Routes.CAPTURE) slideOutVertically(sheet()) { it } else exitFor(navMotion(Routes.MONTH, targetState.destination.route), pop = true) },
         ) {
             val status by container.settings.backupStatus.collectAsState(initial = null)
             val connected by container.backup.connected.collectAsState()
