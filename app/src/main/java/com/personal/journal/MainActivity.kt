@@ -19,6 +19,9 @@ import androidx.compose.animation.slideOutHorizontally
 import com.personal.journal.ui.motion.NavMotion
 import com.personal.journal.ui.motion.LocalSharedScope
 import com.personal.journal.ui.motion.NavScoped
+import com.personal.journal.ui.motion.JustSaved
+import com.personal.journal.ui.motion.consumeOnce
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.personal.journal.ui.motion.dayKey
 import com.personal.journal.ui.motion.sharedTile
 import com.personal.journal.ui.theme.JournalShapes
@@ -215,8 +218,16 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             // The camera lifts away as the journal rises over it, and settles back when the journal drops.
             exitTransition = { if (targetState.destination.route == Routes.MONTH) slideOutVertically(sheet()) { -it / 4 } + fadeOut(sheet()) else exitFor(NavMotion.Push, pop = false) },
             popEnterTransition = { if (initialState.destination.route == Routes.MONTH) slideInVertically(sheet()) { -it / 4 } + fadeIn(sheet()) else enterFor(NavMotion.Push, pop = true) },
-        ) {
+        ) { entry ->
+            var justSaved by rememberSaveable { mutableStateOf<String?>(null) }
+            // Runs each time the camera comes back into view; the handle forgets the id once read, so it plays once.
+            LaunchedEffect(Unit) {
+                val id = entry.savedStateHandle.consumeOnce(JustSaved) ?: return@LaunchedEffect
+                justSaved = container.repository.get(id)?.entry?.photoFile?.let { f -> container.repository.photoFile(f).path }
+            }
             CaptureScreen(
+                justSaved = justSaved?.let(::File),
+                onJustSavedShown = { justSaved = null },
                 cameraEnabled = cameraEnabled,
                 onOpenMonth = { monthVm.showCurrentMonth(); nav.navigate(Routes.MONTH) },
                 onCaptured = { nav.navigate(Routes.review(it)) },
@@ -228,7 +239,11 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             val path = entry.arguments?.getString("path").orEmpty()
             ReviewScreen(
                 vm = viewModel { ReviewViewModel(container.repository, File(path)) },
-                onDone = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
+                onDone = { id ->
+                    // The camera shrinks the saved photo into its handle on the way back.
+                    nav.getBackStackEntry(Routes.CAPTURE).savedStateHandle[JustSaved] = id
+                    nav.popBackStack(Routes.CAPTURE, inclusive = false)
+                },
                 onRetake = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
             )
         }
