@@ -242,6 +242,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             EntryScreen(
                 vm = viewModel { EntryViewModel(container.repository, id) },
                 photoFile = container.repository::photoFile,
+                tintCache = container.tintCache,
                 onBack = { nav.popBackStack() },
             )
         }
