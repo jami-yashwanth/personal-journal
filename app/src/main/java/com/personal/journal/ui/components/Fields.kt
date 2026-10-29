@@ -32,7 +32,7 @@ fun SoftTextField(
     minHeight: Dp = 52.dp,
     shape: Shape = JournalShapes.button,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
-    background: androidx.compose.ui.graphics.Color = JournalColors.Surface,
+    background: androidx.compose.ui.graphics.Color = JournalColors.Card,
 ) {
     BasicTextField(
         value = value,
