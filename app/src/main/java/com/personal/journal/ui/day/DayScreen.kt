@@ -32,6 +32,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.size.Dimension
+import coil3.size.Size
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.personal.journal.data.db.EntryType
 import com.personal.journal.ui.components.CircleIconButton
 import com.personal.journal.ui.components.DateLabel
@@ -125,8 +130,11 @@ private fun PhotoTile(id: String, file: File, aspect: Float, time: String, capti
             .clip(JournalShapes.card).background(JournalColors.Card),
     ) {
         Box {
+            // Decoded at a full column's width: the day may first be laid out inside a tile that is still growing.
+            val column = LocalWindowInfo.current.containerSize.width / 2
+            val request = ImageRequest.Builder(LocalContext.current).data(file).size(Size(column, Dimension.Undefined)).build()
             AsyncImage(
-                file, contentDescription = caption ?: "Photo", contentScale = ContentScale.Crop,
+                request, contentDescription = caption ?: "Photo", contentScale = ContentScale.Crop,
                 // Clipped here as well as by the card: in flight the photo is drawn on its own, without the card around it.
                 modifier = Modifier.fillMaxWidth().aspectRatio(aspect).sharedPhoto(photoKey(id), shape).clip(shape).background(JournalColors.Sunk),
                 onSuccess = { s -> s.result.memoryCacheKey?.let { imageKeys.put(id, it) } },

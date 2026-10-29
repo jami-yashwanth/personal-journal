@@ -56,6 +56,8 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.size.Size
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import com.personal.journal.ui.motion.ImageKeys
 import com.personal.journal.ui.motion.noteKey
@@ -250,7 +252,9 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, imageKey
         ) {
             entry.photoFile?.let {
                 // The Day tile's decoded photo stands in while the full size loads, so nothing grey flies in.
-                val request = ImageRequest.Builder(LocalContext.current).data(photoFile(it))
+                // Decoded at the hero's full size: it may first be laid out mid-flight, at a tile's size, and Coil would keep that.
+                val full = with(LocalDensity.current) { Size(300.dp.roundToPx(), (300f / HERO_ASPECT).dp.roundToPx()) }
+                val request = ImageRequest.Builder(LocalContext.current).data(photoFile(it)).size(full)
                     .placeholderMemoryCacheKey(imageKeys.get(entry.id)).build()
                 AsyncImage(
                     request, contentDescription = entry.text ?: "Photo",
