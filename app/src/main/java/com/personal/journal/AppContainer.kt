@@ -3,6 +3,7 @@ package com.personal.journal
 import android.content.Context
 import android.net.Uri
 import com.personal.journal.backup.BackupManager
+import com.personal.journal.ui.motion.ImageKeys
 import com.personal.journal.data.AppSettings
 import com.personal.journal.data.JournalRepository
 import com.personal.journal.data.PhotoStore
@@ -24,6 +25,7 @@ class AppContainer(val context: Context) {
     val settings: AppSettings by lazy { AppSettings(context) }
     val lockGate = LockGate()
     val tintCache = TintCache()
+    val imageKeys = ImageKeys()
     val repository: JournalRepository by lazy {
         JournalRepository(db, photoStore, onChanged = { backup.onJournalChanged() })
     }

@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.personal.journal.ui.motion.ImageKeys
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
@@ -42,7 +43,7 @@ class EntryScreenTest {
         var backed = false
         rule.setContent {
             JournalTheme(darkTheme = false) {
-                EntryScreen(vm, photoFile = { File(tmp.root, it) }, tintCache = TintCache(), onBack = { backed = true })
+                EntryScreen(vm, photoFile = { File(tmp.root, it) }, tintCache = TintCache(), imageKeys = ImageKeys(), onBack = { backed = true })
             }
         }
         rule.waitUntil { vm.day.value.size == 3 }

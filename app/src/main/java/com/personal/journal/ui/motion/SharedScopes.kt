@@ -61,3 +61,6 @@ fun Modifier.sharedPhoto(key: String, shape: Shape): Modifier {
 fun NavScoped(scope: AnimatedVisibilityScope, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalNavScope provides scope, content = content)
 }
+
+/** Only the page the pager has settled on takes part, so the side peeks stay put. */
+fun sharedKeyFor(page: Int, settledPage: Int, key: String): String? = key.takeIf { page == settledPage }

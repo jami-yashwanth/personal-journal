@@ -14,6 +14,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.personal.journal.ui.motion.ImageKeys
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
@@ -32,7 +33,7 @@ class DayScreenTest {
         rule.setContent {
             JournalTheme(darkTheme = false) {
                 DayScreen(
-                    DayViewModel(j.repo, "2026-10-25"), photoFile = { File(tmp.root, it) },
+                    DayViewModel(j.repo, "2026-10-25"), photoFile = { File(tmp.root, it) }, imageKeys = ImageKeys(),
                     onBack = { backed = true }, onOpenEntry = {}, onCamera = {}, onImport = {}, onWrite = {},
                 )
             }

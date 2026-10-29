@@ -55,6 +55,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import com.personal.journal.ui.motion.ImageKeys
+import com.personal.journal.ui.motion.noteKey
+import com.personal.journal.ui.motion.photoKey
+import com.personal.journal.ui.motion.sharedPhoto
+import com.personal.journal.ui.motion.sharedTile
 import com.personal.journal.data.db.EntryType
 import com.personal.journal.data.db.EntryWithTags
 import com.personal.journal.ui.components.CircleIconButton
@@ -82,7 +89,7 @@ import kotlin.math.min
 private const val HERO_ASPECT = 300f / 430f
 
 @Composable
-fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: TintCache, onBack: () -> Unit) {
+fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: TintCache, imageKeys: ImageKeys, onBack: () -> Unit) {
     val day by vm.day.collectAsStateWithLifecycle()
     val e by vm.entry.collectAsStateWithLifecycle()
     val selected by vm.selected.collectAsStateWithLifecycle()
@@ -145,7 +152,8 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
                     // text belongs to the settled page; in a side peek only the card shows
                     // a lambda, so the per-frame offset is read in the graphicsLayer and does not recompose every page
                     val textAlpha = { 1f - min(1f, abs(pager.currentPage - page + pager.currentPageOffsetFraction)) }
-                    if (colour == null) PhotoPage(item, photoFile, textAlpha) else TextPage(item, colour, textAlpha)
+                    val shared = page == pager.settledPage
+                    if (colour == null) PhotoPage(item, photoFile, imageKeys, shared, textAlpha) else TextPage(item, colour, shared, textAlpha)
                 }
             } else {
                 val tagState by editing.state.collectAsStateWithLifecycle()
@@ -214,7 +222,7 @@ private fun EntryWithTags.colourOrNull(): TagColour? =
 
 /** Day and time, the photo as a 300×430 hero, and the caption clamped to three lines until tapped. */
 @Composable
-private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlpha: () -> Float) {
+private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, imageKeys: ImageKeys, shared: Boolean, textAlpha: () -> Float) {
     val entry = item.entry
     var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
     var overflows by remember(entry.id) { mutableStateOf(false) }
@@ -236,12 +244,16 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlph
                 .widthIn(max = 300.dp)
                 .fillMaxWidth()
                 .aspectRatio(HERO_ASPECT)
+                .then(if (shared) Modifier.sharedPhoto(photoKey(entry.id), JournalShapes.hero) else Modifier)
                 .clip(JournalShapes.hero)
                 .background(JournalColors.Sunk),
         ) {
             entry.photoFile?.let {
+                // The Day tile's decoded photo stands in while the full size loads, so nothing grey flies in.
+                val request = ImageRequest.Builder(LocalContext.current).data(photoFile(it))
+                    .placeholderMemoryCacheKey(imageKeys.get(entry.id)).build()
                 AsyncImage(
-                    photoFile(it), contentDescription = entry.text ?: "Photo",
+                    request, contentDescription = entry.text ?: "Photo",
                     contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -271,11 +283,12 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlph
 
 /** A text entry as a big index card in its tag colour; long text scrolls inside it. */
 @Composable
-private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: () -> Float) {
+private fun TextPage(item: EntryWithTags, colour: TagColour, shared: Boolean, textAlpha: () -> Float) {
     val entry = item.entry
     Column(
         Modifier
             .fillMaxSize()
+            .then(if (shared) Modifier.sharedTile(noteKey(entry.id), JournalShapes.hero) else Modifier)
             .clip(JournalShapes.hero)
             .background(colour.fill)
             .verticalScroll(rememberScrollState())

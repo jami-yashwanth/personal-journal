@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,6 +23,12 @@ class SharedKeysTest {
     @Test fun keysAreDistinctPerKind() {
         assertNotEquals(photoKey("a"), noteKey("a"))
         assertNotEquals(photoKey("a"), photoKey("b"))
+    }
+
+    @Test fun peeksHaveNoKey() {
+        assertEquals("k", sharedKeyFor(page = 1, settledPage = 1, key = "k"))
+        assertNull(sharedKeyFor(page = 0, settledPage = 1, key = "k"))
+        assertNull(sharedKeyFor(page = 2, settledPage = 1, key = "k"))
     }
 
     @Test fun dayKeyIsStable() {

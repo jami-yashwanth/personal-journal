@@ -265,6 +265,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             NavScoped(this) { Box(Modifier.fillMaxSize().sharedTile(dayKey(date), JournalShapes.tile).background(JournalColors.Background)) { DayScreen(
                 vm = viewModel { DayViewModel(container.repository, date) },
                 photoFile = container.repository::photoFile,
+                imageKeys = container.imageKeys,
                 onBack = { nav.popBackStack() },
                 onOpenEntry = { nav.navigate(Routes.entry(it)) },
                 onCamera = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
@@ -278,6 +279,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 vm = viewModel { EntryViewModel(container.repository, id) },
                 photoFile = container.repository::photoFile,
                 tintCache = container.tintCache,
+                imageKeys = container.imageKeys,
                 onBack = { nav.popBackStack() },
             ) }
         }
