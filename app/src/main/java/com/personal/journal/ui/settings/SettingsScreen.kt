@@ -203,7 +203,10 @@ fun PhraseGrid(words: List<String>) {
 
 @Composable
 private fun Card(content: @Composable ColumnScope.() -> Unit) =
-    Column(Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card), content = content)
+    Column(
+        Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card).border(1.5.dp, JournalColors.Line, JournalShapes.card),
+        content = content,
+    )
 
 @Composable
 private fun Divider() = HorizontalDivider(color = JournalColors.Line, modifier = Modifier.padding(horizontal = 16.dp))
