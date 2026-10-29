@@ -20,8 +20,7 @@ import com.personal.journal.ui.motion.NavMotion
 import com.personal.journal.ui.motion.LocalSharedScope
 import com.personal.journal.ui.motion.NavScoped
 import com.personal.journal.ui.motion.JustSaved
-import com.personal.journal.ui.motion.consumeOnce
-import androidx.compose.runtime.saveable.rememberSaveable
+import com.personal.journal.ui.motion.rememberJustSaved
 import com.personal.journal.ui.motion.dayKey
 import com.personal.journal.ui.motion.sharedTile
 import com.personal.journal.ui.theme.JournalShapes
@@ -219,11 +218,8 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
             exitTransition = { if (targetState.destination.route == Routes.MONTH) slideOutVertically(sheet()) { -it / 4 } + fadeOut(sheet()) else exitFor(NavMotion.Push, pop = false) },
             popEnterTransition = { if (initialState.destination.route == Routes.MONTH) slideInVertically(sheet()) { -it / 4 } + fadeIn(sheet()) else enterFor(NavMotion.Push, pop = true) },
         ) { entry ->
-            var justSaved by rememberSaveable { mutableStateOf<String?>(null) }
-            // Runs each time the camera comes back into view; the handle forgets the id once read, so it plays once.
-            LaunchedEffect(Unit) {
-                val id = entry.savedStateHandle.consumeOnce(JustSaved) ?: return@LaunchedEffect
-                justSaved = container.repository.get(id)?.entry?.photoFile?.let { f -> container.repository.photoFile(f).path }
+            var justSaved by rememberJustSaved(entry.savedStateHandle) { id ->
+                container.repository.get(id)?.entry?.photoFile?.let { container.repository.photoFile(it).path }
             }
             CaptureScreen(
                 justSaved = justSaved?.let(::File),
