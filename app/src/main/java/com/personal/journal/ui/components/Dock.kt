@@ -42,7 +42,7 @@ fun Dock(actions: List<DockAction>, modifier: Modifier = Modifier) {
             .background(JournalColors.Action)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         actions.forEach { DockSlot(it) }
     }

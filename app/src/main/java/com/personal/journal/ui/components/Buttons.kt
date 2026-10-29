@@ -29,7 +29,7 @@ import com.personal.journal.ui.theme.JournalShapes
 private val BorderWidth = 1.5.dp
 private val OnColourInk = Color(0xFF1E1B19)
 
-/** Filled action pill (the single primary action on a screen). With [arrow], a circle holding an arrow sits on the right. */
+/** Filled action pill (the single primary action on a screen). With [arrow], the label sits at the start and a circle holding an arrow at the end. */
 @Composable
 fun PrimaryButton(
     label: String,
@@ -51,9 +51,9 @@ fun PrimaryButton(
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(start = 26.dp, end = if (arrow) 10.dp else 26.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = if (arrow) Arrangement.SpaceBetween else Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
     ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = ink)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = ink, modifier = if (arrow) Modifier.padding(end = 14.dp) else Modifier)
         if (arrow) {
             Box(Modifier.size(36.dp).clip(CircleShape).background(ink), contentAlignment = Alignment.Center) {
                 Icon(JournalIcons.Arrow, contentDescription = null, tint = fill, modifier = Modifier.size(18.dp))

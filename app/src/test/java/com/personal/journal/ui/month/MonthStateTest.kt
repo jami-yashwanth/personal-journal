@@ -57,7 +57,7 @@ class MonthStateTest {
         assertEquals("2026-10-25", today.placed.localDate)
         assertEquals(TileSize.LARGE, today.placed.size)
         assertEquals("Today, 25", today.label)
-        assertEquals(listOf(TileItem.Photo("thumbs/e1.jpg"), TileItem.Note("Lunch"), TileItem.Photo("thumbs/e2.jpg")), today.items)
+        assertEquals(listOf(TileItem.Photo("thumbs/e1.jpg"), TileItem.Note("Lunch", emptyList()), TileItem.Photo("thumbs/e2.jpg")), today.items)
         assertEquals(0, today.hiddenCount)
     }
 
@@ -66,13 +66,13 @@ class MonthStateTest {
         val day = (1..5).map { e(3) } + e(3, photo = false, text = "Hike to the falls")
         val tile = buildMonthUi(october, day, "2026-10-25", null, emptyList()).tiles.single()
         assertEquals(TileSize.LARGE, tile.placed.size)
-        assertEquals(TileItem.Note("Hike to the falls"), tile.items[1])
+        assertEquals(TileItem.Note("Hike to the falls", emptyList()), tile.items[1])
     }
 
     @Test
     fun captionsShowAsNotes() {
         val tile = buildMonthUi(october, listOf(e(7, text = "Sunday cricket")), "2026-10-25", null, emptyList()).tiles.single()
-        assertEquals(listOf(TileItem.Photo("thumbs/e${n}.jpg"), TileItem.Note("Sunday cricket")), tile.items)
+        assertEquals(listOf(TileItem.Photo("thumbs/e${n}.jpg"), TileItem.Note("Sunday cricket", emptyList())), tile.items)
     }
 
     @Test
@@ -100,5 +100,11 @@ class MonthStateTest {
         val s = buildMonthUi(october, listOf(e(3)), "2026-10-25", null, emptyList())
         assertEquals("1 day, 1 entry", s.subtitle)
         assertFalse(s.tiles.single().isToday)
+    }
+
+    @Test
+    fun noteCarriesItsTags() {
+        val tile = buildMonthUi(october, listOf(e(7, photo = false, text = "Nets at six", "office", "cricket")), "2026-10-25", null, emptyList()).tiles.single()
+        assertEquals(listOf(TileItem.Note("Nets at six", listOf("office", "cricket"))), tile.items)
     }
 }
