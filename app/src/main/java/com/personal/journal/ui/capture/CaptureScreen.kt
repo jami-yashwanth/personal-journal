@@ -14,7 +14,6 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -168,7 +168,7 @@ fun CaptureScreen(
     ) {
         Box(
             Modifier.fillMaxWidth().weight(1f).swipeUpToOpen { openMonth() }.padding(start = 12.dp, end = 12.dp, top = 14.dp)
-                .clip(JournalShapes.photo).background(JournalColors.Surface),
+                .clip(ViewfinderShape).background(JournalColors.Sunk),
         ) {
             if (granted) {
                 AndroidView(
@@ -204,13 +204,13 @@ fun CaptureScreen(
                         if (flashOn) JournalIcons.FlashOn else JournalIcons.FlashOff,
                         if (flashOn) "Flash on" else "Flash off",
                         { flashOn = !flashOn },
-                        background = JournalColors.Scrim,
+                        onColour = true,
                     )
                     CircleIconButton(
                         JournalIcons.Flip,
                         if (front) "Switch to back camera" else "Switch to front camera",
                         { front = !front },
-                        background = JournalColors.Scrim,
+                        onColour = true,
                     )
                 }
             } else {
@@ -244,14 +244,11 @@ fun CaptureScreen(
                 size = 52.dp,
             )
             Box(
-                Modifier.size(76.dp).clip(CircleShape).border(3.dp, JournalColors.PrimaryFill, CircleShape)
+                Modifier.size(86.dp).clip(CircleShape).background(if (granted) JournalColors.Action else JournalColors.Sunk)
                     .clickable(enabled = granted && !busy, role = Role.Button, onClickLabel = "Take photo", onClick = ::shoot),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    Modifier.size(62.dp).clip(CircleShape)
-                        .background(if (granted) JournalColors.PrimaryFill else JournalColors.SurfaceRaised),
-                )
+                Box(Modifier.size(66.dp).clip(CircleShape).background(if (granted) JournalColors.OnAction else JournalColors.Line))
             }
             CircleIconButton(JournalIcons.Pen, "Write an entry", onWrite, size = 52.dp)
         }
@@ -305,6 +302,7 @@ private object LastPreviewFrame {
     }
 }
 
+private val ViewfinderShape = RoundedCornerShape(36.dp)
 private val SwipeUpDistance = 80.dp
 private val FlickDistance = 24.dp
 private val FlickVelocity = 600.dp

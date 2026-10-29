@@ -142,7 +142,7 @@ private fun NoteTile(text: String, time: String, tags: List<String>, onClick: ()
             .padding(start = 16.dp, top = 15.dp, end = 16.dp, bottom = 13.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = colour.onFill, maxLines = 8, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.bodyLarge, color = colour.onFill)
         Text(footer, style = MaterialTheme.typography.bodySmall, color = colour.onFill.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
