@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,9 @@ fun DayScreen(
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
     val state = s ?: return Box(Modifier.fillMaxSize().background(JournalColors.Background))
+    // Deleting a day's last entry leaves nothing to show; the state only exists once loaded, so this never fires on first load.
+    val isEmpty = state.items.isEmpty()
+    LaunchedEffect(isEmpty) { if (isEmpty) onBack() }
     val launchPicker = rememberImportPicker(onImport)
     Box(Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding()) {
         // Two columns, each moment in time order dropping into whichever column is shorter.
@@ -128,7 +132,7 @@ private fun PhotoTile(file: File, aspect: Float, time: String, caption: String?,
     }
 }
 
-/** A written entry on its tag colour: the words, growing up to about eight lines, then "time · tag". */
+/** A written entry on its tag colour: the words, growing to its full length, then "time · tag". */
 @Composable
 private fun NoteTile(text: String, time: String, tags: List<String>, onClick: () -> Unit) {
     val colour = entryColour(tags)
@@ -140,6 +144,6 @@ private fun NoteTile(text: String, time: String, tags: List<String>, onClick: ()
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(text, style = MaterialTheme.typography.bodyLarge, color = colour.onFill)
-        Text(footer, style = MaterialTheme.typography.bodySmall, color = colour.onFill.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(footer, style = MaterialTheme.typography.bodySmall, color = colour.onFill, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

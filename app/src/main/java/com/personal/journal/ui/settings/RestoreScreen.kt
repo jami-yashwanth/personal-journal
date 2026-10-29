@@ -41,6 +41,7 @@ import com.personal.journal.backup.WrongPhraseException
 import com.personal.journal.data.PhotoStore
 import com.personal.journal.data.db.JournalDatabase
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
@@ -124,7 +125,7 @@ fun RestoreScreen(vm: RestoreViewModel, onDone: () -> Unit, onBack: () -> Unit) 
             Input("Secret Access Key", vm.secret, secret = true) { vm.secret = it }
             Input("Bucket name", vm.bucket) { vm.bucket = it }
             Input("Recovery phrase (12 words)", vm.phraseInput, multiline = true) { vm.phraseInput = it }
-            vm.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger) }
+            vm.error?.let { ErrorText(it) }
             if (vm.running && vm.total > 0) {
                 LinearProgressIndicator(
                     progress = { vm.done.toFloat() / vm.total },

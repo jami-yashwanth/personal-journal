@@ -102,7 +102,7 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
         PrimaryButton(
-            "Save to today", enabled = vm.canSave, arrow = true,
+            if (vm.savesToToday) "Save to today" else "Save", enabled = vm.canSave, arrow = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 8.dp, bottom = 16.dp),
             onClick = { scope.launch { if (vm.save() != null) onDone() } },
         )
@@ -116,7 +116,7 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
             onDismissRequest = { confirmDiscard = false },
             containerColor = JournalColors.Card,
             title = { Text("Discard this entry?", color = JournalColors.TextPrimary) },
-            confirmButton = { TextButton(onClick = { confirmDiscard = false; onClose() }) { Text("Discard", color = JournalColors.Danger) } },
+            confirmButton = { TextButton(onClick = { confirmDiscard = false; onClose() }) { Text("Discard", color = JournalColors.TextPrimary) } },
             dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text("Keep writing", color = JournalColors.TextPrimary) } },
         )
     }

@@ -63,12 +63,14 @@ class TintCache {
 
     suspend fun tint(entryId: String, thumb: File?, dark: Boolean): Color? {
         if (thumb == null) return null
-        // lastModified so a retaken photo does not keep a stale tint
-        val key = "$entryId-$dark-${thumb.lastModified()}"
-        cache[key]?.let { return it }
-        val color = withContext(Dispatchers.IO) { decode(thumb, dark) } ?: return null
-        cache[key] = color
-        return color
+        return withContext(Dispatchers.IO) {
+            // lastModified so a retaken photo does not keep a stale tint
+            val key = "$entryId-$dark-${thumb.lastModified()}"
+            cache[key]?.let { return@withContext it }
+            val color = decode(thumb, dark) ?: return@withContext null
+            cache[key] = color
+            color
+        }
     }
 
     private fun decode(file: File, dark: Boolean): Color? = try {

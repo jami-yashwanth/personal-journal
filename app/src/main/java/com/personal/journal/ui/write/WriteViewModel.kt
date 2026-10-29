@@ -17,6 +17,7 @@ class WriteViewModel(private val repository: JournalRepository) : ViewModel() {
     var takenAt by mutableLongStateOf(repository.now())
         private set
 
+    val savesToToday: Boolean get() = repository.isToday(takenAt)
     val canSave: Boolean get() = text.isNotBlank()
     val hasUnsavedText: Boolean get() = text.isNotBlank()
 

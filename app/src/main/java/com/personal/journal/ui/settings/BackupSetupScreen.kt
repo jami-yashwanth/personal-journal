@@ -35,6 +35,7 @@ import com.personal.journal.backup.InvalidPhraseException
 import com.personal.journal.backup.R2Credentials
 import com.personal.journal.backup.WrongPhraseException
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
@@ -156,7 +157,7 @@ private fun Title(title: String, body: String) {
 
 @Composable
 private fun Error(message: String?) {
-    if (message != null) Text(message, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger)
+    if (message != null) ErrorText(message)
 }
 
 @Composable

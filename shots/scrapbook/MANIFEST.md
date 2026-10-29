@@ -14,8 +14,8 @@ Data: DebugSeeder (launched once via `--ez seed true`; later launches without th
 - day-many-top-light.png / day-many-bottom-light.png: Day with 7 entries, top and scrolled to the bottom. day-dark-7.png: the same 7-entry day in dark.
 - day-missing-thumb-light.png: Day after the thumb was deleted; Day shows the full photo, so it still renders.
 - entry-photo-light/dark.png: Entry pager, 2 of 4 (photo "First coffee before standup"), tapped from Day.
-- entry-caption-collapsed-light.png: Entry 1 of 4 with a 6-line caption collapsed (3 lines + ellipsis, dock overlaps the last line).
-- entry-caption-expanded-light.png: after tapping the caption; text runs under the dock. entry-caption-expanded-scrolled-light.png: scrolled to the end of the caption (all 7 lines visible).
+- entry-caption-collapsed-light.png: Entry 1 of 4 with a 6-line caption collapsed (3 lines + ellipsis; content clears the dock).
+- entry-caption-expanded-light.png: after tapping the caption; the caption scrolls clear of the dock. entry-caption-expanded-scrolled-light.png: scrolled to the end of the caption (all 7 lines visible).
 - entry-text-light/dark.png: Entry 3 of 4, text-only "Lunch with Ravi..." (untagged, pink).
 - entry-text-dark-lavender.png / entry-text-lavender-light.png: Entry 2 of 7, text "Called mum tonight." tagged family (lavender; "family".hashCode mod 6 = 2).
 - entry-missing-thumb-light.png: Entry 1 of 7 opened after the thumb was deleted; Entry uses the full photo so it renders normally.
@@ -26,5 +26,6 @@ Data: DebugSeeder (launched once via `--ez seed true`; later launches without th
 ## Could not capture
 - lock-light/dark: the journal lock only appears when Biometrics.available() is true; this AVD has no device credential/biometric, so the lock screen never shows. Setting a device PIN would change the emulator's security settings, so I did not.
 - Future month empty: not reachable (blocked in the app); September substituted.
-- Fresh (current) empty month: needs an empty DB.
+- month-fresh-light/dark.png, month-fresh-largefont-light.png: current month (October) on a cleared app, no entries ("A fresh month.", Take the first photo, look back at September, Restore from backup). The largefont shot is font_scale 1.3; nothing clips or overlaps.
+- Backup-failure banner (Month), Settings backup error line and Review error: need a real backup/save failure, not reachable on the emulator, so month-light, settings-light and review-light were not re-shot.
 - entry-missing-thumb: Entry screen does not use the thumbnail, so the state is only visible on Month.

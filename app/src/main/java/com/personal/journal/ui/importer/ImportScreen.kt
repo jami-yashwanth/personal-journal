@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.DateTimePickerDialog
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
@@ -88,7 +89,7 @@ fun ImportScreen(vm: ImportViewModel, uris: List<Uri>, onDone: () -> Unit, onCan
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (item.error != null) {
-                            Text(item.error, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger)
+                            ErrorText(item.error)
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(whenLabel(item.takenAt), style = MaterialTheme.typography.labelMedium, color = JournalColors.TextPrimary, modifier = Modifier.weight(1f))
@@ -118,7 +119,7 @@ fun ImportScreen(vm: ImportViewModel, uris: List<Uri>, onDone: () -> Unit, onCan
                 tagState, onToggle = vm.tags::toggle, onQuery = vm.tags::query, onCreate = vm.tags::create,
                 onOpenSearch = vm.tags::openSearch, onCloseSearch = vm.tags::closeSearch,
             )
-            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger, modifier = Modifier.padding(4.dp)) }
+            message?.let { ErrorText(it, Modifier.padding(4.dp)) }
             Box(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp)) {
                 PrimaryButton(
                     "Add $readable ${if (readable == 1) "entry" else "entries"}",

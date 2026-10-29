@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.components.SoftButton
@@ -104,7 +105,7 @@ fun ReviewScreen(vm: ReviewViewModel, onDone: () -> Unit, onRetake: () -> Unit) 
                 onToggle = vm.tags::toggle, onQuery = vm.tags::query, onCreate = vm.tags::create,
                 onOpenSearch = vm.tags::openSearch, onCloseSearch = vm.tags::closeSearch,
             )
-            error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger) }
+            error?.let { ErrorText(it) }
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),

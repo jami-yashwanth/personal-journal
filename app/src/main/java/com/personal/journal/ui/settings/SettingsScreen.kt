@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +43,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
@@ -166,7 +169,7 @@ fun SettingsScreen(
             text = { Text("New entries won't be backed up. Your existing backup in R2 is not deleted.", color = JournalColors.TextSecondary) },
             confirmButton = {
                 TextButton(onClick = { confirmDisconnect = false; scope.launch { vm.backup.disconnect() } }) {
-                    Text("Disconnect", color = JournalColors.Danger)
+                    Text("Disconnect", color = JournalColors.TextPrimary)
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDisconnect = false }) { Text("Cancel", color = JournalColors.TextPrimary) } },
@@ -248,7 +251,7 @@ private fun ValueRow(title: String, value: String, onClick: () -> Unit) {
 private fun TextRow(title: String, subtitle: String, error: Boolean = false) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge, color = JournalColors.TextPrimary)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = if (error) JournalColors.Danger else JournalColors.TextMuted)
+        if (error) ErrorText(subtitle) else Text(subtitle, style = MaterialTheme.typography.bodySmall, color = JournalColors.TextMuted)
     }
 }
 
@@ -258,10 +261,10 @@ private fun ActionRow(title: String, onClick: () -> Unit, destructive: Boolean =
         Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            title, style = MaterialTheme.typography.bodyLarge,
-            color = if (destructive) JournalColors.Danger else JournalColors.TextPrimary, modifier = Modifier.weight(1f),
-        )
+        if (destructive) {
+            Box(Modifier.padding(end = 10.dp).size(8.dp).clip(CircleShape).background(JournalColors.Danger))
+        }
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = JournalColors.TextPrimary, modifier = Modifier.weight(1f))
         if (!destructive) androidx.compose.material3.Icon(JournalIcons.ChevronRight, null, tint = JournalColors.TextMuted)
     }
 }

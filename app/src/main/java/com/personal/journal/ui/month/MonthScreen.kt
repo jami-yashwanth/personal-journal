@@ -115,8 +115,10 @@ fun MonthScreen(
                 Text(
                     banner,
                     style = MaterialTheme.typography.bodySmall,
-                    color = JournalColors.Danger,
-                    modifier = Modifier.padding(horizontal = 20.dp).padding(top = 10.dp).clickable(onClick = onSettings),
+                    color = JournalColors.OnColour,
+                    modifier = Modifier.padding(horizontal = 20.dp).padding(top = 10.dp).fillMaxWidth()
+                        .clip(JournalShapes.button).background(TagPalette[3].fill)
+                        .clickable(onClick = onSettings).padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
             if (state.filterTags.isNotEmpty()) {

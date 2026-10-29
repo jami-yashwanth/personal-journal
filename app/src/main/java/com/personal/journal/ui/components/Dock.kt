@@ -14,12 +14,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
+import com.personal.journal.ui.theme.LocalJournalPalette
+
+private val DangerOnCream = Color(0xFFC2414B)
 
 /** Bottom padding for scrolling content that runs under a [Dock]. */
 val DockClearance: Dp = 100.dp
@@ -53,7 +57,8 @@ private fun DockSlot(action: DockAction) {
     val size = if (action.primary) 56.dp else 52.dp
     val ink = when {
         action.primary -> JournalColors.Action
-        action.danger -> JournalColors.Danger
+        // coral is ~2.2:1 on the cream dark-mode dock; this red is ~4.3:1 there
+        action.danger -> if (LocalJournalPalette.current.isDark) DangerOnCream else JournalColors.Danger
         else -> JournalColors.OnAction
     }
     Box(

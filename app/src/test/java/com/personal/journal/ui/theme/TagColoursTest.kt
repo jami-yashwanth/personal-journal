@@ -17,6 +17,13 @@ class TagColoursTest {
         repeat(200) { assertTrue(tagColour("tag$it") in TagPalette) }
     }
 
+    /** Pins the hash -> palette mapping: reordering TagPalette would recolour every existing tag. */
+    @Test
+    fun familyStaysLavender() {
+        assertEquals(TagPalette[2], tagColour("family"))
+        assertEquals(Color(0xFFB8B3F6), tagColour("family").fill)
+    }
+
     @Test
     fun firstTagAlphabetically() {
         assertEquals(tagColour("cricket"), entryColour(listOf("office", "cricket")))

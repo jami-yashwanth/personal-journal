@@ -143,7 +143,8 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
                     val item = day[page]
                     val colour = item.colourOrNull()
                     // text belongs to the settled page; in a side peek only the card shows
-                    val textAlpha = 1f - min(1f, abs(pager.currentPage - page + pager.currentPageOffsetFraction))
+                    // a lambda, so the per-frame offset is read in the graphicsLayer and does not recompose every page
+                    val textAlpha = { 1f - min(1f, abs(pager.currentPage - page + pager.currentPageOffsetFraction)) }
                     if (colour == null) PhotoPage(item, photoFile, textAlpha) else TextPage(item, colour, textAlpha)
                 }
             } else {
@@ -199,7 +200,7 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
             confirmButton = {
                 // the last entry of the day empties it, and dayIsEmpty takes the screen back
                 TextButton(onClick = { confirmDelete = false; scope.launch { vm.delete() } }) {
-                    Text("Delete", color = JournalColors.Danger)
+                    Text("Delete", color = JournalColors.TextPrimary)
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel", color = JournalColors.TextPrimary) } },
@@ -213,7 +214,7 @@ private fun EntryWithTags.colourOrNull(): TagColour? =
 
 /** Day and time, the photo as a 300×430 hero, and the caption clamped to three lines until tapped. */
 @Composable
-private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlpha: Float) {
+private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlpha: () -> Float) {
     val entry = item.entry
     var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
     var overflows by remember(entry.id) { mutableStateOf(false) }
@@ -223,11 +224,11 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlph
     ) {
         Text(
             dayTitle(entry.localDate), style = MaterialTheme.typography.displayLarge, color = JournalColors.TextPrimary, maxLines = 1,
-            modifier = Modifier.graphicsLayer { alpha = textAlpha },
+            modifier = Modifier.graphicsLayer { alpha = textAlpha() },
         )
         Text(
             timeLabel(entry.takenAt), style = MaterialTheme.typography.bodySmall, color = JournalColors.TextSecondary,
-            modifier = Modifier.padding(top = 6.dp).graphicsLayer { alpha = textAlpha },
+            modifier = Modifier.padding(top = 6.dp).graphicsLayer { alpha = textAlpha() },
         )
         Box(
             Modifier
@@ -256,7 +257,7 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlph
                 // only a caption cut short by the clamp is worth tapping
                 onTextLayout = { if (!expanded) overflows = it.hasVisualOverflow },
                 modifier = Modifier
-                    .graphicsLayer { alpha = textAlpha }
+                    .graphicsLayer { alpha = textAlpha() }
                     .padding(top = 24.dp, start = 4.dp, end = 4.dp)
                     .then(
                         if (expanded || overflows) {
@@ -270,7 +271,7 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File, textAlph
 
 /** A text entry as a big index card in its tag colour; long text scrolls inside it. */
 @Composable
-private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: Float) {
+private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: () -> Float) {
     val entry = item.entry
     Column(
         Modifier
@@ -281,7 +282,7 @@ private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: Float) {
             .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = DockClearance),
     ) {
         Row(
-            Modifier.graphicsLayer { alpha = textAlpha }.horizontalScroll(rememberScrollState()),
+            Modifier.graphicsLayer { alpha = textAlpha() }.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -295,7 +296,7 @@ private fun TextPage(item: EntryWithTags, colour: TagColour, textAlpha: Float) {
             entry.text.orEmpty(),
             style = MaterialTheme.typography.headlineLarge,
             color = colour.onFill,
-            modifier = Modifier.padding(top = 22.dp).graphicsLayer { alpha = textAlpha },
+            modifier = Modifier.padding(top = 22.dp).graphicsLayer { alpha = textAlpha() },
         )
     }
 }
