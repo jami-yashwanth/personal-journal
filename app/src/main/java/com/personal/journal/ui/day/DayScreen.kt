@@ -121,8 +121,8 @@ private fun PhotoTile(id: String, file: File, aspect: Float, time: String, capti
     // The photo takes the card's top corners, and its bottom ones too when there is no caption under it.
     val shape = if (caption.isNullOrBlank()) JournalShapes.card else JournalShapes.card.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
     Column(
-        Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card)
-            .clickable(role = Role.Button, onClickLabel = "Open photo from $time", onClick = onClick),
+        Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Open photo from $time", onClick = onClick)
+            .clip(JournalShapes.card).background(JournalColors.Card),
     ) {
         Box {
             AsyncImage(
@@ -152,8 +152,8 @@ private fun NoteTile(id: String, text: String, time: String, tags: List<String>,
     val colour = entryColour(tags)
     val footer = tags.minOrNull()?.let { "$time · $it" } ?: time
     Column(
-        Modifier.fillMaxWidth().sharedTile(noteKey(id), JournalShapes.card).clip(JournalShapes.card).background(colour.fill)
-            .clickable(role = Role.Button, onClickLabel = "Open note from $time", onClick = onClick)
+        Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Open note from $time", onClick = onClick)
+            .sharedTile(noteKey(id), JournalShapes.card).clip(JournalShapes.card).background(colour.fill)
             .padding(start = 16.dp, top = 15.dp, end = 16.dp, bottom = 13.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {

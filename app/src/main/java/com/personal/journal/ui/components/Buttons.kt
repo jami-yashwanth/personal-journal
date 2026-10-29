@@ -45,10 +45,11 @@ fun PrimaryButton(
     Row(
         modifier
             .height(height)
+            // Click handling before the fill, so the whole pill sinks on press, not just its label.
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .clip(JournalShapes.pill)
             .background(fill)
             .graphicsLayer { alpha = if (enabled) 1f else 0.4f }
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(start = 26.dp, end = if (arrow) 10.dp else 26.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (arrow) Arrangement.SpaceBetween else Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
@@ -68,10 +69,10 @@ fun SoftButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier
     Row(
         modifier
             .height(height)
+            .clickable(role = Role.Button, onClick = onClick)
             .clip(JournalShapes.pill)
             .background(JournalColors.Card)
             .border(BorderWidth, JournalColors.Line, JournalShapes.pill)
-            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -121,9 +122,9 @@ fun DestructiveIconButton(contentDescription: String, onClick: () -> Unit, modif
     Box(
         modifier
             .size(50.dp)
+            .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick)
             .clip(JournalShapes.pill)
-            .border(BorderWidth, JournalColors.Line, JournalShapes.pill)
-            .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick),
+            .border(BorderWidth, JournalColors.Line, JournalShapes.pill),
         contentAlignment = Alignment.Center,
     ) {
         Icon(JournalIcons.Trash, contentDescription = contentDescription, tint = JournalColors.Danger, modifier = Modifier.size(19.dp))

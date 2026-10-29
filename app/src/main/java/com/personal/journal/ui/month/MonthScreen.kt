@@ -120,8 +120,8 @@ fun MonthScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = JournalColors.OnColour,
                     modifier = Modifier.padding(horizontal = 20.dp).padding(top = 10.dp).fillMaxWidth()
-                        .clip(JournalShapes.button).background(TagPalette[3].fill)
-                        .clickable(onClick = onSettings).padding(horizontal = 16.dp, vertical = 12.dp),
+                        .clickable(onClick = onSettings).clip(JournalShapes.button).background(TagPalette[3].fill)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
             if (state.filterTags.isNotEmpty()) {
@@ -171,9 +171,9 @@ private fun Tile(tile: TileUi, photoFile: (String) -> File, onClick: () -> Unit)
     val haptic = rememberTapHaptic()
     Box(
         Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }
+            .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}") { haptic(); onClick() }
             .sharedTile(dayKey(tile.placed.localDate), JournalShapes.tile).clip(JournalShapes.tile)
-            .background(JournalColors.Sunk)
-            .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}") { haptic(); onClick() },
+            .background(JournalColors.Sunk),
     ) {
         Scrapbook(tile, photoFile)
         if (tile.hiddenCount > 0) {

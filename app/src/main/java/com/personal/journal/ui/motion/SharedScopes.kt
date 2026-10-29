@@ -50,10 +50,13 @@ fun Modifier.sharedPhoto(key: String, shape: Shape): Modifier {
     val shared = LocalSharedScope.current ?: return this
     val nav = LocalNavScope.current ?: return this
     return with(shared) {
-        this@sharedPhoto.sharedElement(
+        // Bounds rather than an element: the photo is re-laid out at every in-between size, so it stays cropped and
+        // rounded mid-flight instead of flying as a stretched square. Both sides show the same photo, so the cross-fade is unseen.
+        this@sharedPhoto.sharedBounds(
             rememberSharedContentState(key),
             nav,
             boundsTransform = springBounds,
+            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
             clipInOverlayDuringTransition = OverlayClip(shape),
         )
     }

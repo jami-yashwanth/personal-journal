@@ -275,8 +275,9 @@ fun CaptureScreen(
                     size = 52.dp,
                 )
                 Box(
-                    Modifier.size(86.dp).clip(CircleShape).background(if (granted) JournalColors.Action else JournalColors.Sunk)
-                        .clickable(enabled = granted && !busy, role = Role.Button, onClickLabel = "Take photo", onClick = ::shoot),
+                    Modifier.size(86.dp)
+                        .clickable(enabled = granted && !busy, role = Role.Button, onClickLabel = "Take photo", onClick = ::shoot)
+                        .clip(CircleShape).background(if (granted) JournalColors.Action else JournalColors.Sunk),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(Modifier.size(66.dp).clip(CircleShape).background(if (granted) JournalColors.OnAction else JournalColors.Line))
