@@ -202,9 +202,8 @@
   - The first `consumeOnce(JustSaved) == "/p.jpg"`, and the second is `null`.
 - [ ] **Step 2: Run it.** Expected: FAIL.
 - [ ] **Step 3: Implement `consumeOnce`.**
-- [ ] **Step 4: Hand the file over.**
-  - In `ReviewScreen`, `onDone` is called with the saved photo `File` that `ReviewViewModel` was built with.
-  - In `MainActivity` `REVIEW`, set `onDone = { f -> nav.getBackStackEntry(Routes.CAPTURE).savedStateHandle[JustSaved] = f.path; nav.popBackStack(Routes.CAPTURE, false) }`.
+- [ ] **Step 4: Hand the path over.**
+  - In `MainActivity` `REVIEW`, set `onDone = { nav.getBackStackEntry(Routes.CAPTURE).savedStateHandle[JustSaved] = path; nav.popBackStack(Routes.CAPTURE, false) }`. `ReviewScreen` is unchanged.
   - In `CAPTURE`, `val justSaved = remember(entry) { entry.savedStateHandle.consumeOnce(JustSaved)?.let(::File) }`. Use `rememberSaveable` so rotation doesn't replay it: consume into saveable state, then clear it after the animation ends.
 - [ ] **Step 5: Build the overlay** in `CaptureScreen`.
   - Record the viewfinder `Box` bounds and the handle bounds with `onGloballyPositioned` (root coordinates).
