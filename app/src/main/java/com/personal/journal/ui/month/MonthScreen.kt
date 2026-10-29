@@ -261,10 +261,11 @@ private fun EmptyMonth(isCurrentMonth: Boolean, onCapture: () -> Unit, onWrite: 
 
 @Composable
 private fun GhostTile(modifier: Modifier) {
+    val dashColor = JournalColors.Hairline
     Box(
         modifier.height(110.dp).drawBehind {
             drawRoundRect(
-                color = JournalColors.Hairline,
+                color = dashColor,
                 cornerRadius = CornerRadius(20.dp.toPx()),
                 style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))),
             )

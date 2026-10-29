@@ -1,53 +1,77 @@
 package com.personal.journal.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 object JournalColors {
-    val Background = Color(0xFF121212)
-    val Surface = Color(0xFF1C1C1C)
-    val SurfaceRaised = Color(0xFF262626)
-    val TextPrimary = Color(0xFFEDEDED)
-    val TextSecondary = Color(0xFFBDBDBD)
-    val TextMuted = Color(0xFF8C8C8C)
-    val PrimaryFill = Color(0xFFEDEDED)
-    val OnPrimary = Color(0xFF121212)
-    val DestructiveOutline = Color(0xFF3A2522)
-    val DestructiveIcon = Color(0xFFE58A80)
-    val Hairline = Color(0xFF2A2A2A)
-    val Scrim = Color(0xB3121212)
-    /** The off-white border of a photo print on the month tiles. */
-    val Paper = Color(0xFFE8E4DC)
+    val Background @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.background
+    val Card @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.card
+    val Sunk @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.sunk
+    val Line @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.line
+    val TextPrimary @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.text
+    val TextSecondary @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.textSecondary
+    val TextMuted @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.textMuted
+    val Action @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.action
+    val OnAction @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onAction
+    val Paper @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.paper
+    val OnPaper @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onPaper
+    val OnColour @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onColour
+    val Danger @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.danger
+
+    // Legacy aliases, removed in Task 10 once every call site uses the new names.
+    val Surface @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.card
+    val SurfaceRaised @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.sunk
+    val PrimaryFill @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.action
+    val OnPrimary @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onAction
+    val Hairline @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.line
+    val DestructiveIcon @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.danger
+    val DestructiveOutline @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.line
+    val Scrim @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.text.copy(alpha = 0.55f)
 }
 
 object JournalShapes {
-    val tile = RoundedCornerShape(20.dp)
+    val tile = RoundedCornerShape(24.dp)
     val card = RoundedCornerShape(24.dp)
     val button = RoundedCornerShape(16.dp)
     val photo = RoundedCornerShape(28.dp)
     val pill = RoundedCornerShape(50)
+    val hero = RoundedCornerShape(40.dp)
+    val print = RoundedCornerShape(7.dp)
 }
 
-private val scheme = darkColorScheme(
-    primary = JournalColors.PrimaryFill,
-    onPrimary = JournalColors.OnPrimary,
-    background = JournalColors.Background,
-    onBackground = JournalColors.TextPrimary,
-    surface = JournalColors.Surface,
-    onSurface = JournalColors.TextPrimary,
-    surfaceVariant = JournalColors.SurfaceRaised,
-    onSurfaceVariant = JournalColors.TextSecondary,
-    surfaceContainer = JournalColors.Surface,
-    surfaceContainerHigh = JournalColors.SurfaceRaised,
-    outline = JournalColors.Hairline,
-    error = JournalColors.DestructiveIcon,
-)
+private fun JournalPalette.toColorScheme() =
+    if (isDark) {
+        darkColorScheme(
+            primary = action, onPrimary = onAction,
+            background = background, onBackground = text,
+            surface = card, onSurface = text,
+            surfaceVariant = sunk, onSurfaceVariant = textSecondary,
+            surfaceContainer = card, surfaceContainerHigh = sunk,
+            outline = line, error = danger,
+        )
+    } else {
+        lightColorScheme(
+            primary = action, onPrimary = onAction,
+            background = background, onBackground = text,
+            surface = card, onSurface = text,
+            surfaceVariant = sunk, onSurfaceVariant = textSecondary,
+            surfaceContainer = card, surfaceContainerHigh = sunk,
+            outline = line, error = danger,
+        )
+    }
 
 @Composable
-fun JournalTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme, typography = JournalTypography, content = content)
+fun JournalTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    val palette = if (darkTheme) DarkPalette else LightPalette
+    CompositionLocalProvider(LocalJournalPalette provides palette) {
+        MaterialTheme(colorScheme = palette.toColorScheme(), typography = JournalTypography, content = content)
+    }
 }

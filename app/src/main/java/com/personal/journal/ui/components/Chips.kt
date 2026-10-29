@@ -64,6 +64,7 @@ fun TagChip(
 /** Dashed pill used for "+ Create" actions. */
 @Composable
 fun DashedChip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val dashColor = JournalColors.Hairline
     Box(
         modifier
             .minimumInteractiveComponentSize()
@@ -75,7 +76,7 @@ fun DashedChip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier
                 .height(32.dp)
                 .drawBehind {
                     drawRoundRect(
-                        color = JournalColors.Hairline.copy(alpha = 1f),
+                        color = dashColor.copy(alpha = 1f),
                         cornerRadius = CornerRadius(size.height / 2),
                         style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))),
                     )
