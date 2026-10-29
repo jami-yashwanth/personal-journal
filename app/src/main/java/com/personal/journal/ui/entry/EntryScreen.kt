@@ -66,12 +66,10 @@ import com.personal.journal.ui.theme.JournalShapes
 import com.personal.journal.ui.theme.LocalJournalPalette
 import com.personal.journal.ui.theme.TagColour
 import com.personal.journal.ui.theme.entryColour
+import com.personal.journal.ui.dayTitle
 import com.personal.journal.ui.timeLabel
 import kotlinx.coroutines.launch
 import java.io.File
-import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
 
 private const val HERO_ASPECT = 300f / 430f
 
@@ -200,12 +198,6 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
 /** A text entry's tag colour; null for a photo, whose page takes the photo tint instead. */
 private fun EntryWithTags.colourOrNull(): TagColour? =
     if (entry.type == EntryType.TEXT) entryColour(tags.map { it.name }) else null
-
-/** "Monday, 26", as on the Day screen. */
-private fun dayTitle(localDate: String): String {
-    val date = LocalDate.parse(localDate)
-    return "${date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}, ${date.dayOfMonth}"
-}
 
 /** Day and time, the photo as a 300×430 hero, and the caption clamped to three lines until tapped. */
 @Composable

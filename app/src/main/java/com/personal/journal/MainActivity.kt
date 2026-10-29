@@ -234,7 +234,9 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 photoFile = container.repository::photoFile,
                 onBack = { nav.popBackStack() },
                 onOpenEntry = { nav.navigate(Routes.entry(it)) },
-                onCapture = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
+                onCamera = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
+                onImport = { container.pendingImport = it; nav.navigate(Routes.IMPORT) },
+                onWrite = { nav.navigate(Routes.WRITE) },
             )
         }
         composable(Routes.ENTRY, arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->

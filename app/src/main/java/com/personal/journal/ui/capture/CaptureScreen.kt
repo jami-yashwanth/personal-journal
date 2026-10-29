@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -53,6 +52,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.personal.journal.ui.components.rememberImportPicker
 import com.personal.journal.ui.components.CircleIconButton
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
@@ -138,9 +138,7 @@ fun CaptureScreen(
         }
     }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20)) { uris ->
-        if (uris.isNotEmpty()) onImport(uris)
-    }
+    val launchPicker = rememberImportPicker(onImport)
 
     fun shoot() {
         if (busy || !granted) return
@@ -242,7 +240,7 @@ fun CaptureScreen(
         ) {
             CircleIconButton(
                 JournalIcons.Gallery, "Add photos from gallery",
-                { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                launchPicker,
                 size = 52.dp,
             )
             Box(

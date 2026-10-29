@@ -1,9 +1,6 @@
 package com.personal.journal.ui.month
 
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -59,8 +56,10 @@ import com.personal.journal.ui.components.DockClearance
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.components.TagChip
+import com.personal.journal.ui.components.rememberImportPicker
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
+import com.personal.journal.ui.theme.TagPalette
 import com.personal.journal.ui.theme.entryColour
 import com.personal.journal.ui.theme.slipStyle
 import java.io.File
@@ -83,10 +82,7 @@ fun MonthScreen(
     val s by vm.state.collectAsStateWithLifecycle()
     val state = s ?: return Box(Modifier.fillMaxSize().background(JournalColors.Background))
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20)) { uris ->
-        if (uris.isNotEmpty()) onImport(uris)
-    }
-    val launchPicker = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    val launchPicker = rememberImportPicker(onImport)
     val freshMonth = state.isEmpty && state.isCurrentMonth
 
     Box(
@@ -204,7 +200,7 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
         }
         val style = remember(noteSize) { slipStyle(noteSize) }
         val maxLines = with(density) {
-            slipMaxLines((maxHeight + bottomClear / 2).toPx(), style.lineHeight.toPx(), 12.dp.toPx(), alone)
+            slipMaxLines(maxHeight.toPx(), style.lineHeight.toPx(), 12.dp.toPx(), alone)
         }
         // Slips go on top of the prints.
         tile.items.zip(spots).sortedBy { (item, _) -> item is TileItem.Note }.forEach { (item, cell) ->
@@ -275,11 +271,11 @@ private fun EmptyMonth(
     }
     Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(width = 210.dp, height = 140.dp)) {
-            BlankTile(Color(0xFF2E8A78), Modifier.offset(8.dp, 20.dp).graphicsLayer { rotationZ = -10f })
-            BlankTile(Color(0xFFF5B840), Modifier.offset(64.dp, 0.dp)) {
+            BlankTile(TagPalette[0].fill, Modifier.offset(8.dp, 20.dp).graphicsLayer { rotationZ = -10f })
+            BlankTile(TagPalette[3].fill, Modifier.offset(64.dp, 0.dp)) {
                 Text("1", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold), color = JournalColors.OnColour)
             }
-            BlankTile(Color(0xFFF07F86), Modifier.offset(120.dp, 24.dp).graphicsLayer { rotationZ = 9f })
+            BlankTile(JournalColors.Danger, Modifier.offset(120.dp, 24.dp).graphicsLayer { rotationZ = 9f })
         }
         Text(
             "A fresh month.",
