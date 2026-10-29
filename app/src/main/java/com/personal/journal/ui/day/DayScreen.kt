@@ -40,7 +40,6 @@ import com.personal.journal.ui.components.CircleIconButton
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
-import com.personal.journal.ui.theme.handwriting
 import com.personal.journal.ui.timeLabel
 import java.io.File
 
@@ -119,7 +118,7 @@ private fun PhotoTile(file: File, aspect: Float, time: String, caption: String?,
         if (!caption.isNullOrBlank()) {
             Text(
                 caption,
-                style = handwriting(17.sp),
+                style = MaterialTheme.typography.bodyLarge,
                 color = JournalColors.TextPrimary,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
@@ -139,6 +138,6 @@ private fun NoteTile(text: String, time: String, onClick: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(time, style = MaterialTheme.typography.labelSmall, color = JournalColors.TextMuted)
-        Text(text, style = handwriting(18.sp), color = JournalColors.TextSecondary, maxLines = 8, overflow = TextOverflow.Ellipsis)
+        Text(text, style = MaterialTheme.typography.bodyLarge, color = JournalColors.TextSecondary, maxLines = 8, overflow = TextOverflow.Ellipsis)
     }
 }

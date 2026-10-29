@@ -1,6 +1,5 @@
 package com.personal.journal.ui.entry
 
-import com.personal.journal.ui.theme.handwriting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,7 +84,7 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, onBack: () -> U
                     entry.text?.let {
                         Text(
                             it,
-                            style = handwriting(if (entry.type == EntryType.TEXT) 25.sp else 24.sp, line = 1.25f),
+                            style = MaterialTheme.typography.bodyLarge,
                             color = JournalColors.TextPrimary,
                         )
                     }

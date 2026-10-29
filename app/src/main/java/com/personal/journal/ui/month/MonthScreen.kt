@@ -1,6 +1,5 @@
 package com.personal.journal.ui.month
 
-import com.personal.journal.ui.theme.handwriting
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -189,7 +188,7 @@ private fun Scrapbook(tile: TileUi, photoFile: (String) -> File) {
                 is TileItem.Note -> Box(placed, contentAlignment = Alignment.CenterStart) {
                     Text(
                         item.text,
-                        style = handwriting(noteSize, line = 1.1f),
+                        style = MaterialTheme.typography.bodyLarge,
                         color = JournalColors.TextSecondary,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
