@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plum Theme Mocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#3A2030;          /* base plum */
+  --lift:#4C2B3E;        /* top-of-screen lift */
+  --raised:#472838;      /* cards, rows */
+  --raised-2:#53303F;    /* pressed / nested */
+  --line:rgba(255,226,238,.07);
+  --text:#F6ECF0;
+  --text-2:#D9C3CD;
+  --muted:#A98D9B;
+  --accent:#D7E35A;      /* chartreuse: commit actions only */
+  --on-accent:#2A1622;
+  --cream:#F3E7EC;
+  --danger:#F0A090;
+  --serif:"Newsreader",Georgia,serif;
+  --sans:"Geist",system-ui,sans-serif;
+  --page:#16101A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--text);font-family:var(--sans);padding:40px 16px 80px}
+.intro{max-width:1240px;margin:0 auto 32px}
+.intro h1{font:500 40px/1.1 var(--serif);letter-spacing:-.01em}
+.intro p{color:var(--muted);margin-top:8px;font-size:14px;max-width:620px;line-height:1.5}
+.swatches{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);background:#211821;padding:6px 10px 6px 6px;border-radius:999px}
+.sw i{width:20px;height:20px;border-radius:50%;display:block;border:1px solid rgba(255,255,255,.08)}
+.grid{display:flex;flex-wrap:wrap;gap:40px 28px;justify-content:center;max-width:1300px;margin:0 auto}
+figure{width:390px;max-width:100%}
+figcaption{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.45}
+figcaption b{color:var(--text-2);font-weight:500}
+
+/* ---------- phone ---------- */
+.phone{width:390px;max-width:100%;height:844px;border-radius:44px;overflow:hidden;position:relative;
+  background:radial-gradient(120% 55% at 50% 0%,var(--lift) 0%,var(--bg) 62%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06),0 30px 60px rgba(0,0,0,.45)}
+.phone.tint{background:radial-gradient(120% 55% at 50% 0%,var(--t-lift) 0%,var(--t-bg) 62%)}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:14px;font-weight:500;color:var(--text)}
+.status .dots{display:flex;gap:5px;align-items:center}
+.status .dots span{width:15px;height:10px;border-radius:2px;background:var(--text);opacity:.9}
+.status .dots span:first-child{width:12px;opacity:.6}
+.content{position:absolute;inset:44px 0 0 0;padding:0 20px}
+.handle{position:absolute;bottom:8px;left:50%;width:120px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);transform:translateX(-50%)}
+
+/* bevelled control */
+.bev{background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.015));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(0,0,0,.22),0 1px 2px rgba(0,0,0,.28);
+  border:1px solid rgba(255,255,255,.045)}
+.icon-btn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--text);flex:none}
+.icon-btn svg,.pillnav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.glass{background:rgba(30,14,24,.42);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.topbar{display:flex;align-items:center;justify-content:space-between;height:56px}
+.fab{position:absolute;right:20px;bottom:34px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.12),0 8px 20px rgba(0,0,0,.35)}
+.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.title{font:500 40px/1.05 var(--serif);letter-spacing:-.015em}
+.title.center{text-align:center}
+.meta{font-size:13px;color:var(--muted);margin-top:6px}
+.meta.center{text-align:center}
+.chips{display:flex;gap:8px;margin-top:18px;overflow:hidden}
+.chip{height:32px;padding:0 14px;border-radius:999px;display:flex;align-items:center;font-size:13px;color:var(--text-2);white-space:nowrap}
+.chip.on{background:var(--cream);color:var(--on-accent);box-shadow:none;border-color:transparent;font-weight:500}
+.btn{height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;padding:0 22px}
+.btn.accent{background:var(--accent);color:var(--on-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.12)}
+.btn.cream{background:var(--cream);color:var(--on-accent)}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.img{background-size:cover;background-position:center;background-color:var(--raised)}
+
+/* month tiles */
+.bento{display:grid;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:78px;gap:8px;margin-top:16px}
+.tile{border-radius:22px;overflow:hidden;position:relative}
+.tile .badge{position:absolute;left:8px;bottom:8px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:500;display:flex;align-items:center}
+.tile.note{background:var(--raised);padding:12px 13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.tile.note .d{font:500 22px/1 var(--serif)}
+.tile.note p{font:400 14px/1.32 var(--serif);color:var(--text-2);margin-top:6px;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.collage{display:grid;gap:3px;height:100%}
+
+/* day masonry */
+.masonry{columns:2;column-gap:10px;margin-top:20px}
+.m{break-inside:avoid;margin-bottom:10px;border-radius:22px;overflow:hidden;position:relative}
+.m.note{background:var(--raised);padding:14px 15px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.m.note p{font:400 16px/1.38 var(--serif);color:var(--text)}
+.m .time{font-size:12px;color:var(--muted);margin-top:10px}
+.m .ptime{position:absolute;left:10px;bottom:10px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;display:flex;align-items:center}
+
+/* entry carousel */
+.carousel{position:relative;height:440px;margin:22px -20px 0}
+.peek{position:absolute;top:24px;bottom:24px;width:300px;border-radius:30px}
+.peek.l{right:calc(50% + 150px - 22px)}
+.peek.r{left:calc(50% + 150px - 22px)}
+.hero{position:absolute;left:50%;top:0;width:300px;height:440px;transform:translateX(-50%);border-radius:40px;box-shadow:0 0 0 12px var(--t-bg)}
+.caption{font:400 20px/1.4 var(--serif);text-align:center;margin:26px 12px 0;color:var(--text)}
+.pillnav{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);height:60px;border-radius:999px;display:flex;align-items:center;gap:4px;padding:0 8px}
+.pillnav a{width:48px;height:44px;border-radius:999px;display:grid;place-items:center;color:var(--text)}
+.pillnav a.danger{color:var(--danger)}
+.dots-row{display:flex;gap:6px;justify-content:center;margin-top:18px}
+.dots-row i{width:6px;height:6px;border-radius:50%;background:var(--text);opacity:.25}
+.dots-row i.on{opacity:.9;width:18px;border-radius:3px}
+
+/* settings */
+.group{background:var(--raised);border-radius:22px;margin-top:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.row{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;gap:12px}
+.row+.row{border-top:1px solid var(--line)}
+.row .l1{font-size:15px}
+.row .l2{font-size:13px;color:var(--muted);margin-top:3px}
+.row .v{font-size:15px;color:var(--text-2)}
+.toggle{width:50px;height:30px;border-radius:999px;background:var(--cream);position:relative;flex:none}
+.toggle::after{content:"";position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;background:var(--bg)}
+.toggle.off{background:var(--raised-2)}
+.toggle.off::after{left:3px;right:auto;background:var(--muted)}
+.chev{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2}
+.section-label{font-size:12px;color:var(--muted);margin:26px 4px 0;letter-spacing:.02em}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Plum</h1>
+  <p>One deep plum surface, a serif voice for anything you wrote, Geist for everything the app says, and chartreuse only on the button that saves or captures. The photo viewer tints its plum toward the photo on screen.</p>
+  <div class="swatches">
+    <span class="sw"><i style="background:#3A2030"></i>Plum #3A2030</span>
+    <span class="sw"><i style="background:#472838"></i>Raised #472838</span>
+    <span class="sw"><i style="background:#F6ECF0"></i>Text #F6ECF0</span>
+    <span class="sw"><i style="background:#A98D9B"></i>Muted #A98D9B</span>
+    <span class="sw"><i style="background:#D7E35A"></i>Accent #D7E35A</span>
+    <span class="sw"><i style="background:#F0A090"></i>Delete #F0A090</span>
+  </div>
+</div>
+
+<!-- shared svg icons -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+  <symbol id="trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="img" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9.5" cy="9.5" r="1.5"/><path d="M20 15l-4-4-8 9"/></symbol>
+  <symbol id="flash" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+  <symbol id="flip" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2 2M20 12a8 8 0 01-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<div class="grid">
+
+<!-- 1 CAPTURE -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:34</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content" style="padding:0 12px">
+    <div class="img" style="height:560px;border-radius:34px;margin-top:4px;position:relative;background-image:url(https://picsum.photos/id/1060/800/1100)">
+      <div style="position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between">
+        <div class="icon-btn glass"><svg><use href="#flash"/></svg></div>
+        <div class="icon-btn glass"><svg><use href="#flip"/></svg></div>
+      </div>
+    </div>
+    <div class="bev" style="margin:14px 4px 0;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 18px">
+      <span style="font-size:14px"><span style="font:500 16px var(--serif)">Today</span><span style="color:var(--muted)"> · 3 entries</span></span>
+      <span style="display:flex;gap:4px;align-items:center">
+        <span class="img" style="width:34px;height:34px;border-radius:12px;background-image:url(https://picsum.photos/id/431/100/100)"></span>
+        <span class="img" style="width:34px;height:34px;border-radius:12px;background-image:url(https://picsum.photos/id/513/100/100)"></span>
+        <svg class="chev" style="margin-left:4px"><use href="#chev"/></svg>
+      </span>
+    </div>
+    <div style="position:absolute;left:24px;right:24px;bottom:42px;display:flex;align-items:center;justify-content:space-between">
+      <div class="icon-btn bev" style="width:52px;height:52px"><svg><use href="#img"/></svg></div>
+      <div style="width:84px;height:84px;border-radius:50%;border:3px solid var(--cream);display:grid;place-items:center">
+        <div style="width:68px;height:68px;border-radius:50%;background:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)"></div>
+      </div>
+      <div class="icon-btn bev" style="width:52px;height:52px"><svg><use href="#pen"/></svg></div>
+    </div>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Capture.</b> Viewfinder sits in plum instead of black. The shutter is the one accent. Today's pill shows thumbnails so you can see the day filling up.</figcaption>
+</figure>
+
+<!-- 2 REVIEW -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:35</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar">
+      <div class="icon-btn bev"><svg><use href="#x"/></svg></div>
+      <span style="font-size:13px;color:var(--muted)">Today, 12:35</span>
+      <div style="width:44px"></div>
+    </div>
+    <div class="img" style="height:470px;border-radius:36px;margin-top:6px;background-image:url(https://picsum.photos/id/431/800/1000)"></div>
+    <div style="font:italic 400 21px/1.4 var(--serif);color:var(--muted);margin:22px 4px 0">Add a line about this…</div>
+    <div class="chips" style="margin-top:14px">
+      <span class="chip bev">+ tag</span><span class="chip bev">office</span><span class="chip bev">gym</span>
+    </div>
+    <div style="position:absolute;left:20px;right:20px;bottom:34px;display:flex;gap:10px">
+      <div class="btn bev" style="flex:1">Retake</div>
+      <div class="btn accent" style="flex:1.6"><svg><use href="#check"/></svg>Save to today</div>
+    </div>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Review.</b> The caption prompt is serif because it becomes your words. "Save to today" says where it lands.</figcaption>
+</figure>
+
+<!-- 3 MONTH -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:36</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar" style="height:auto;margin-top:16px;align-items:flex-start">
+      <div><div class="title">October</div><div class="meta">9 days · 14 entries</div></div>
+      <div class="icon-btn bev"><svg><use href="#sliders"/></svg></div>
+    </div>
+    <div class="chips"><span class="chip on">All</span><span class="chip bev">cricket</span><span class="chip bev">gym</span><span class="chip bev">office</span><span class="chip bev">badminton</span></div>
+    <div class="bento">
+      <div class="tile" style="grid-column:span 2;grid-row:span 3">
+        <div class="collage" style="grid-template-columns:1.1fr 1fr;grid-template-rows:1fr 1fr">
+          <div class="img" style="grid-row:span 2;background-image:url(https://picsum.photos/id/431/400/600)"></div>
+          <div class="img" style="background-image:url(https://picsum.photos/id/513/300/300)"></div>
+          <div class="img" style="background-image:url(https://picsum.photos/id/274/300/300)"></div>
+        </div>
+        <span class="badge glass">Today, 26</span>
+      </div>
+      <div class="tile img" style="grid-row:span 2;background-image:url(https://picsum.photos/id/1047/300/500)"><span class="badge glass">24</span></div>
+      <div class="tile img" style="background-image:url(https://picsum.photos/id/1080/300/300)"><span class="badge glass">23</span></div>
+      <div class="tile note" style="grid-column:span 2;grid-row:span 2"><div class="d">25</div><p style="-webkit-line-clamp:3">Slow Saturday. Cleaned the flat, did laundry, and finally replaced the kitchen bulb that's been dead since August.</p></div>
+      <div class="tile img" style="grid-row:span 2;background-image:url(https://picsum.photos/id/1015/300/500)"><span class="badge glass">22</span></div>
+      <div class="tile img" style="grid-row:span 2;background-image:url(https://picsum.photos/id/452/300/500)"><span class="badge glass">20</span></div>
+      <div class="tile note" style="grid-column:span 2;grid-row:span 2"><div class="d">19</div><p style="-webkit-line-clamp:3">Interview went better than I expected. They asked about the side projects first.</p></div>
+    </div>
+  </div>
+  <div class="fab"><svg><use href="#cam"/></svg></div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Month.</b> Same scrapbook tiles. Notes become serif on raised plum, day numbers sit on frosted badges. One accent: the camera.</figcaption>
+</figure>
+
+<!-- 4 MONTH EMPTY -->
+<figure>
+<div class="phone">
+  <div class="status"><span>09:02</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar" style="height:auto;margin-top:16px;align-items:flex-start">
+      <div><div class="title">November</div><div class="meta">Nothing yet</div></div>
+      <div class="icon-btn bev"><svg><use href="#sliders"/></svg></div>
+    </div>
+    <div style="margin-top:110px;display:flex;flex-direction:column;align-items:center;text-align:center">
+      <div style="display:flex;gap:8px;opacity:.55">
+        <div style="width:70px;height:96px;border-radius:20px;border:1.5px dashed rgba(255,226,238,.25);transform:rotate(-6deg)"></div>
+        <div style="width:70px;height:96px;border-radius:20px;border:1.5px dashed rgba(255,226,238,.25);margin-top:-10px"></div>
+        <div style="width:70px;height:96px;border-radius:20px;border:1.5px dashed rgba(255,226,238,.25);transform:rotate(5deg)"></div>
+      </div>
+      <div style="font:500 28px/1.2 var(--serif);margin-top:30px">A new month.</div>
+      <p style="font-size:15px;color:var(--muted);margin-top:10px;line-height:1.5;max-width:260px">Every day you capture becomes a tile here. Busier days get bigger.</p>
+      <div class="btn accent" style="margin-top:28px"><svg><use href="#cam"/></svg>Take the first photo</div>
+      <div style="font-size:14px;color:var(--text-2);margin-top:18px">Or <u style="text-underline-offset:3px">look back at October</u></div>
+    </div>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Month, empty.</b> First day of a month. No FAB: the big button is the only action, plus a way back to last month.</figcaption>
+</figure>
+
+<!-- 5 DAY -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:37</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar"><div class="icon-btn bev"><svg><use href="#back"/></svg></div></div>
+    <div class="title" style="margin-top:6px">Monday, 26</div>
+    <div class="meta">Today · 3 entries · office</div>
+    <div class="masonry">
+      <div class="m img" style="height:250px;background-image:url(https://picsum.photos/id/431/400/600)"><span class="ptime glass">08:42</span></div>
+      <div class="m note"><p>Lunch with Ravi and Meera at the dosa place near the station. Ravi finally said yes to the Coorg trip in December, so now someone has to actually book it.</p><div class="time">13:15</div></div>
+      <div class="m img" style="height:150px;background-image:url(https://picsum.photos/id/513/400/300)"><span class="ptime glass">13:02</span></div>
+      <div class="m img" style="height:210px;background-image:url(https://picsum.photos/id/274/400/560)"><span class="ptime glass">18:30</span></div>
+      <div class="m note"><p>First coffee before standup. Office was still empty.</p><div class="time">08:42</div></div>
+    </div>
+  </div>
+  <div class="fab"><svg><use href="#cam"/></svg></div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Day.</b> Masonry kept. Long notes wrap in full serif (real copy, not lorem). Times float on photos instead of sitting under them.</figcaption>
+</figure>
+
+<!-- 6 ENTRY — neon tint -->
+<figure>
+<div class="phone tint" style="--t-bg:#3A1A32;--t-lift:#552443">
+  <div class="status"><span>18:31</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar"><div class="icon-btn bev"><svg><use href="#back"/></svg></div><span style="font-size:13px;color:var(--muted)">3 of 3</span><div style="width:44px"></div></div>
+    <div class="title center" style="margin-top:4px">Monday, 26</div>
+    <div class="meta center">18:30 · office</div>
+    <div class="carousel">
+      <div class="peek l img" style="background-image:url(https://picsum.photos/id/513/400/600)"></div>
+      <div class="peek r img" style="background-image:url(https://picsum.photos/id/1047/400/600);opacity:.0"></div>
+      <div class="hero img" style="background-image:url(https://picsum.photos/id/274/700/1000)"></div>
+    </div>
+    <div class="caption">Walked back through the market. Everything was lit up for Diwali already.</div>
+  </div>
+  <div class="pillnav bev"><a><svg><use href="#pen"/></svg></a><a><svg><use href="#cal"/></svg></a><a class="danger"><svg><use href="#trash"/></svg></a></div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Entry, the reference look.</b> Background tinted from the neon photo. The previous entry peeks on the left; it's the day's last entry, so nothing peeks on the right. Swipe moves between the day's entries.</figcaption>
+</figure>
+
+<!-- 7 ENTRY — cool tint -->
+<figure>
+<div class="phone tint" style="--t-bg:#1C2833;--t-lift:#284052">
+  <div class="status"><span>07:10</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar"><div class="icon-btn bev"><svg><use href="#back"/></svg></div><span style="font-size:13px;color:var(--muted)">1 of 2</span><div style="width:44px"></div></div>
+    <div class="title center" style="margin-top:4px">Wednesday, 22</div>
+    <div class="meta center">07:10</div>
+    <div class="carousel">
+      <div class="peek l img" style="opacity:0"></div>
+      <div class="peek r img" style="background-image:url(https://picsum.photos/id/1080/400/600)"></div>
+      <div class="hero img" style="background-image:url(https://picsum.photos/id/1015/700/1000);box-shadow:0 0 0 12px #1C2833"></div>
+    </div>
+    <div class="caption">Ferry at 7. Fog lifted halfway across.</div>
+  </div>
+  <div class="pillnav bev"><a><svg><use href="#pen"/></svg></a><a><svg><use href="#cal"/></svg></a><a class="danger"><svg><use href="#trash"/></svg></a></div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Entry, a different photo.</b> Same screen, tinted slate by a blue photo. The tint cross-fades as you swipe. Text stays readable because the tint is always darkened to a fixed brightness.</figcaption>
+</figure>
+
+<!-- 8 WRITE -->
+<figure>
+<div class="phone">
+  <div class="status"><span>21:04</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar">
+      <div class="icon-btn bev"><svg><use href="#x"/></svg></div>
+      <div class="chip bev" style="gap:6px"><svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8"><use href="#cal"/></svg>Today, 21:04</div>
+      <div style="width:44px"></div>
+    </div>
+    <div style="font:400 26px/1.4 var(--serif);margin-top:34px;color:var(--text)">Badminton after work. Lost two games to Kiran, won the last one 21–19<span style="display:inline-block;width:2px;height:28px;background:var(--accent);vertical-align:-5px;margin-left:2px"></span></div>
+    <div class="chips" style="position:absolute;left:20px;right:20px;bottom:104px"><span class="chip bev">+ tag</span><span class="chip on">badminton</span></div>
+    <div style="position:absolute;left:20px;right:20px;bottom:34px"><div class="btn accent"><svg><use href="#check"/></svg>Save to today</div></div>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Write.</b> Big serif on bare plum, like a page, with no text box. The caret picks up the accent.</figcaption>
+</figure>
+
+<!-- 9 LOCK -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:42</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:80px">
+    <div class="icon-btn bev" style="width:76px;height:76px"><svg style="width:28px;height:28px"><use href="#lock"/></svg></div>
+    <div style="font:500 30px/1.2 var(--serif);margin-top:26px">Your journal</div>
+    <p style="font-size:15px;color:var(--muted);margin-top:8px">Touch the sensor to open it.</p>
+    <div class="btn cream" style="margin-top:30px;width:180px">Unlock</div>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Lock.</b> Warmer than "Journal is locked". Cream button, not accent: unlocking isn't creating.</figcaption>
+</figure>
+
+<!-- 10 SETTINGS -->
+<figure>
+<div class="phone">
+  <div class="status"><span>12:43</span><span class="dots"><span></span><span></span></span></div>
+  <div class="content">
+    <div class="topbar"><div class="icon-btn bev"><svg><use href="#back"/></svg></div></div>
+    <div class="title" style="margin-top:6px">Settings</div>
+    <div class="group" style="margin-top:22px">
+      <div class="row"><div><div class="l1">Lock the journal</div><div class="l2">Fingerprint or PIN each time you open it</div></div><div class="toggle"></div></div>
+    </div>
+    <div class="group">
+      <div class="row"><div><div class="l1">Daily reminder</div><div class="l2">"Anything from today?"</div></div><div class="toggle"></div></div>
+      <div class="row"><div class="l1">Time</div><div class="v">9:00 pm</div></div>
+    </div>
+    <div class="section-label">BACKUP</div>
+    <div class="group" style="margin-top:8px">
+      <div class="row"><div><div class="l1">Not set up</div><div class="l2">Your entries live only on this phone.</div></div></div>
+      <div class="row"><div class="l1">Set up backup</div><svg class="chev"><use href="#chev"/></svg></div>
+      <div class="row"><div class="l1">Restore from backup</div><svg class="chev"><use href="#chev"/></svg></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:18px 4px">14 entries · 38 MB on this phone</p>
+  </div>
+  <div class="handle"></div>
+</div>
+<figcaption><b>Settings.</b> Raised plum groups. Toggles are cream when on; the accent stays reserved for capture and save.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>
