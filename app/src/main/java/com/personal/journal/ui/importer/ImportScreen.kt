@@ -79,16 +79,16 @@ fun ImportScreen(vm: ImportViewModel, uris: List<Uri>, onDone: () -> Unit, onCan
         ) {
             itemsIndexed(items, key = { i, item -> "$i-${item.uri}" }) { i, item ->
                 Row(
-                    Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(JournalColors.Surface).padding(12.dp),
+                    Modifier.padding(horizontal = 12.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(JournalColors.Card).padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     AsyncImage(
                         item.uri, contentDescription = null, contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(76.dp).clip(RoundedCornerShape(14.dp)).background(JournalColors.SurfaceRaised),
+                        modifier = Modifier.size(76.dp).clip(RoundedCornerShape(14.dp)).background(JournalColors.Sunk),
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (item.error != null) {
-                            Text(item.error, style = MaterialTheme.typography.bodySmall, color = JournalColors.DestructiveIcon)
+                            Text(item.error, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger)
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(whenLabel(item.takenAt), style = MaterialTheme.typography.labelMedium, color = JournalColors.TextPrimary, modifier = Modifier.weight(1f))
@@ -105,7 +105,7 @@ fun ImportScreen(vm: ImportViewModel, uris: List<Uri>, onDone: () -> Unit, onCan
                             SoftTextField(
                                 item.caption, { vm.setCaption(i, it) }, "Add a caption",
                                 minHeight = 38.dp, shape = RoundedCornerShape(12.dp),
-                                style = MaterialTheme.typography.bodyMedium, background = JournalColors.SurfaceRaised,
+                                style = MaterialTheme.typography.bodyMedium, background = JournalColors.Sunk,
                             )
                         }
                     }
@@ -118,7 +118,7 @@ fun ImportScreen(vm: ImportViewModel, uris: List<Uri>, onDone: () -> Unit, onCan
                 tagState, onToggle = vm.tags::toggle, onQuery = vm.tags::query, onCreate = vm.tags::create,
                 onOpenSearch = vm.tags::openSearch, onCloseSearch = vm.tags::closeSearch,
             )
-            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.DestructiveIcon, modifier = Modifier.padding(4.dp)) }
+            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.Danger, modifier = Modifier.padding(4.dp)) }
             Box(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp)) {
                 PrimaryButton(
                     "Add $readable ${if (readable == 1) "entry" else "entries"}",

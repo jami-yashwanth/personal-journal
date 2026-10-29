@@ -25,16 +25,6 @@ object JournalColors {
     val OnPaper @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onPaper
     val OnColour @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onColour
     val Danger @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.danger
-
-    // Legacy aliases, removed in Task 10 once every call site uses the new names.
-    val Surface @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.card
-    val SurfaceRaised @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.sunk
-    val PrimaryFill @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.action
-    val OnPrimary @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.onAction
-    val Hairline @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.line
-    val DestructiveIcon @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.danger
-    val DestructiveOutline @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.line
-    val Scrim @Composable @ReadOnlyComposable get() = LocalJournalPalette.current.text.copy(alpha = 0.55f)
 }
 
 object JournalShapes {
