@@ -62,7 +62,9 @@ import com.personal.journal.ui.theme.JournalShapes
 import com.personal.journal.ui.theme.TagPalette
 import com.personal.journal.ui.theme.entryColour
 import com.personal.journal.ui.theme.slipStyle
+import com.personal.journal.ui.motion.dayKey
 import com.personal.journal.ui.motion.rememberTapHaptic
+import com.personal.journal.ui.motion.sharedTile
 import java.io.File
 import java.time.format.TextStyle
 import java.util.Locale
@@ -168,7 +170,8 @@ fun MonthScreen(
 private fun Tile(tile: TileUi, photoFile: (String) -> File, onClick: () -> Unit) {
     val haptic = rememberTapHaptic()
     Box(
-        Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }.clip(JournalShapes.tile)
+        Modifier.fillMaxSize().graphicsLayer { alpha = if (tile.dimmed) 0.18f else 1f }
+            .sharedTile(dayKey(tile.placed.localDate), JournalShapes.tile).clip(JournalShapes.tile)
             .background(JournalColors.Sunk)
             .clickable(role = Role.Button, onClickLabel = "Open ${tile.label}") { haptic(); onClick() },
     ) {

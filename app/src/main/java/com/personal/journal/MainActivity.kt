@@ -19,6 +19,9 @@ import androidx.compose.animation.slideOutHorizontally
 import com.personal.journal.ui.motion.NavMotion
 import com.personal.journal.ui.motion.LocalSharedScope
 import com.personal.journal.ui.motion.NavScoped
+import com.personal.journal.ui.motion.dayKey
+import com.personal.journal.ui.motion.sharedTile
+import com.personal.journal.ui.theme.JournalShapes
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.CompositionLocalProvider
 import com.personal.journal.ui.motion.navMotion
@@ -258,7 +261,8 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
         }
         composable(Routes.DAY, arguments = listOf(navArgument("date") { type = NavType.StringType })) { e ->
             val date = e.arguments?.getString("date").orEmpty()
-            NavScoped(this) { DayScreen(
+            // The page the tapped tile grows into; it is there before the day loads, so the hand-over has a target on its first frame.
+            NavScoped(this) { Box(Modifier.fillMaxSize().sharedTile(dayKey(date), JournalShapes.tile).background(JournalColors.Background)) { DayScreen(
                 vm = viewModel { DayViewModel(container.repository, date) },
                 photoFile = container.repository::photoFile,
                 onBack = { nav.popBackStack() },
@@ -266,7 +270,7 @@ private fun JournalNavHost(nav: NavHostController, activity: FragmentActivity, c
                 onCamera = { nav.popBackStack(Routes.CAPTURE, inclusive = false) },
                 onImport = { container.pendingImport = it; nav.navigate(Routes.IMPORT) },
                 onWrite = { nav.navigate(Routes.WRITE) },
-            ) }
+            ) } }
         }
         composable(Routes.ENTRY, arguments = listOf(navArgument("id") { type = NavType.StringType })) { e ->
             val id = e.arguments?.getString("id").orEmpty()
