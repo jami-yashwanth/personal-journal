@@ -59,6 +59,12 @@ class PhotoTintTest {
     }
 
     @Test
+    fun neutralPixelsDontPullHue() {
+        val px = IntArray(64) { if (it % 2 == 0) 0xFF808080.toInt() else blue[0] }
+        assertEquals(240f, hsl(photoTint(px, false)!!)[0], 3f)
+    }
+
+    @Test
     fun circularHue() {
         val px = IntArray(64) { if (it % 2 == 0) hueArgb(350f) else hueArgb(10f) }
         val h = hsl(photoTint(px, false)!!)[0]

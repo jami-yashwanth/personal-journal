@@ -44,8 +44,9 @@ fun photoTint(argbPixels: IntArray, dark: Boolean): Color? {
             else -> 60f * ((r - g) / d + 4f)
         }
         val rad = Math.toRadians(h.toDouble())
-        sumX += cos(rad)
-        sumY += sin(rad)
+        // weight by saturation so grey pixels (hue 0 by convention) don't pull the mean
+        sumX += s * cos(rad)
+        sumY += s * sin(rad)
         sumS += s
         n++
     }
@@ -61,9 +62,10 @@ class TintCache {
     private val cache = ConcurrentHashMap<String, Color>()
 
     suspend fun tint(entryId: String, thumb: File?, dark: Boolean): Color? {
-        val key = "$entryId-$dark"
-        cache[key]?.let { return it }
         if (thumb == null) return null
+        // lastModified so a retaken photo does not keep a stale tint
+        val key = "$entryId-$dark-${thumb.lastModified()}"
+        cache[key]?.let { return it }
         val color = withContext(Dispatchers.IO) { decode(thumb, dark) } ?: return null
         cache[key] = color
         return color
