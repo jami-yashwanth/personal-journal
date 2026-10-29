@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -41,7 +42,7 @@ fun LockScreen(onUnlock: () -> Unit) {
         verticalArrangement = Arrangement.Center,
     ) {
         // 470dp is the target; on short or landscape screens it shrinks so Unlock stays visible.
-        Box(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 470.dp).clip(JournalShapes.hero).background(JournalColors.Danger).padding(28.dp)) {
+        Box(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 470.dp).fillMaxHeight().clip(JournalShapes.hero).background(JournalColors.Danger).padding(28.dp)) {
             Box(
                 Modifier.align(Alignment.TopEnd).size(84.dp).clip(CircleShape).background(LockInk),
                 contentAlignment = Alignment.Center,
