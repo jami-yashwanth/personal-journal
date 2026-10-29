@@ -91,7 +91,8 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
     var draft by remember(entry.id, vm.editTags) { mutableStateOf(entry.text.orEmpty()) }
     val editing = vm.editTags
 
-    val pager = rememberPagerState(initialPage = vm.initialIndex) { day.size }
+    // selected, not initialIndex: a fresh composition (rotation, theme switch) lands where the user left off
+    val pager = rememberPagerState(initialPage = selected) { day.size }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect(vm::select) }
     // Delete and date changes move the selection; bring the pager along.
     LaunchedEffect(selected) { if (pager.settledPage != selected && !pager.isScrollInProgress) pager.scrollToPage(selected) }
@@ -115,7 +116,7 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
             ) {
                 CircleIconButton(JournalIcons.Back, "Back", onBack, onColour = shownColour != null)
                 Text(
-                    "${pager.currentPage + 1} of ${day.size}",
+                    "${pager.settledPage + 1} of ${day.size}",
                     style = MaterialTheme.typography.labelMedium,
                     color = headerInk,
                     textAlign = TextAlign.Center,
@@ -128,7 +129,7 @@ fun EntryScreen(vm: EntryViewModel, photoFile: (String) -> File, tintCache: Tint
                     pager,
                     Modifier.weight(1f).fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 45.dp),
-                    pageSpacing = 12.dp,
+                    pageSpacing = 25.dp,
                     key = { day[it].entry.id },
                 ) { page ->
                     val item = day[page]
@@ -211,6 +212,7 @@ private fun dayTitle(localDate: String): String {
 private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
     val entry = item.entry
     var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
+    var overflows by remember(entry.id) { mutableStateOf(false) }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = DockClearance),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -244,9 +246,15 @@ private fun PhotoPage(item: EntryWithTags, photoFile: (String) -> File) {
                 textAlign = TextAlign.Center,
                 maxLines = if (expanded) Int.MAX_VALUE else 3,
                 overflow = TextOverflow.Ellipsis,
+                // only a caption cut short by the clamp is worth tapping
+                onTextLayout = { if (!expanded) overflows = it.hasVisualOverflow },
                 modifier = Modifier
                     .padding(top = 24.dp, start = 4.dp, end = 4.dp)
-                    .clickable(role = Role.Button, onClickLabel = if (expanded) "Collapse caption" else "Show full caption") { expanded = !expanded },
+                    .then(
+                        if (expanded || overflows) {
+                            Modifier.clickable(role = Role.Button, onClickLabel = if (expanded) "Collapse caption" else "Show full caption") { expanded = !expanded }
+                        } else Modifier,
+                    ),
             )
         }
     }

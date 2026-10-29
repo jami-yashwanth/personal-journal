@@ -39,7 +39,12 @@ class EntryViewModel(private val repository: JournalRepository, private val id: 
     var editTags by mutableStateOf<TagPickerModel?>(null)
         private set
 
+    private var loaded = false
+
+    /** Resolves the day once; later calls (the screen re-entering composition) keep the current page. */
     suspend fun load() {
+        if (loaded) return
+        loaded = true
         showDayOf(id)
         initialIndex = _selected.value
     }

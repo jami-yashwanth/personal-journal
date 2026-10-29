@@ -124,4 +124,27 @@ class EntryViewModelTest {
         assertEquals(listOf(a, b), vm.day.value.map { it.entry.id })
         assertEquals(b, vm.entry.value!!.entry.id)
     }
+
+    @Test
+    fun reloadAfterDeletingOpenedEntryKeepsDay() = runTest {
+        val (a, b, c) = threeOnOneDay()
+        val vm = EntryViewModel(j.repo, b)
+        vm.load()
+        vm.delete()
+        vm.load() // the screen re-entering composition, e.g. after rotation
+        assertFalse(vm.dayIsEmpty.value)
+        assertEquals(listOf(a, c), vm.day.value.map { it.entry.id })
+        assertEquals(c, vm.entry.value!!.entry.id)
+    }
+
+    @Test
+    fun reloadKeepsSelection() = runTest {
+        val (_, b, c) = threeOnOneDay()
+        val vm = EntryViewModel(j.repo, b)
+        vm.load()
+        vm.select(2)
+        vm.load()
+        assertEquals(2, vm.selected.value)
+        assertEquals(c, vm.entry.value!!.entry.id)
+    }
 }
