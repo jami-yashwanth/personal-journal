@@ -1,5 +1,7 @@
 package com.personal.journal.ui.theme
 
+import androidx.compose.foundation.LocalIndication
+import com.personal.journal.ui.motion.PressScaleIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +64,9 @@ private fun JournalPalette.toColorScheme() =
 fun JournalTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val palette = if (darkTheme) DarkPalette else LightPalette
     CompositionLocalProvider(LocalJournalPalette provides palette) {
-        MaterialTheme(colorScheme = palette.toColorScheme(), typography = JournalTypography, content = content)
+        MaterialTheme(colorScheme = palette.toColorScheme(), typography = JournalTypography) {
+            // Inside MaterialTheme, which would otherwise set the ripple.
+            CompositionLocalProvider(LocalIndication provides PressScaleIndication, content = content)
+        }
     }
 }

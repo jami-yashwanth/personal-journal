@@ -64,9 +64,9 @@ private fun DockSlot(action: DockAction) {
     Box(
         Modifier
             .size(size)
+            .clickable(role = Role.Button, onClickLabel = action.label, onClick = action.onClick)
             .clip(CircleShape)
-            .then(if (action.primary) Modifier.background(JournalColors.OnAction) else Modifier)
-            .clickable(role = Role.Button, onClickLabel = action.label, onClick = action.onClick),
+            .then(if (action.primary) Modifier.background(JournalColors.OnAction) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Icon(action.icon, contentDescription = action.label, tint = ink, modifier = Modifier.size(22.dp))
