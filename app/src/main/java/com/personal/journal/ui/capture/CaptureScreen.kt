@@ -78,11 +78,28 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Observer
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.lerp
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
+import coil3.compose.AsyncImage
+import com.personal.journal.ui.motion.navSpring
+import com.personal.journal.ui.motion.pressSpring
+import com.personal.journal.ui.motion.rememberTapHaptic
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import java.io.File
 import java.util.UUID
 
 @Composable
 fun CaptureScreen(
+    justSaved: File?,
+    onJustSavedShown: () -> Unit,
     cameraEnabled: Boolean,
     onOpenMonth: () -> Unit,
     onCaptured: (File) -> Unit,
@@ -140,8 +157,11 @@ fun CaptureScreen(
 
     val launchPicker = rememberImportPicker(onImport)
 
+    val haptic = rememberTapHaptic()
+
     fun shoot() {
         if (busy || !granted) return
+        haptic()
         busy = true
         val file = File(context.cacheDir, "capture-${UUID.randomUUID()}.jpg")
         controller.takePicture(
@@ -163,96 +183,156 @@ fun CaptureScreen(
 
     val openMonth by rememberUpdatedState(onOpenMonth)
 
-    Column(
-        Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding(),
-    ) {
-        Box(
-            Modifier.fillMaxWidth().weight(1f).swipeUpToOpen { openMonth() }.padding(start = 12.dp, end = 12.dp, top = 14.dp)
-                .clip(ViewfinderShape).background(JournalColors.Sunk),
-        ) {
-            if (granted) {
-                AndroidView(
-                    // COMPATIBLE renders into a TextureView, which moves with screen transitions; the default SurfaceView stays put.
-                    factory = {
-                        PreviewView(it).apply {
-                            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-                            // Screen flash for the front camera lights up this window.
-                            setScreenFlashWindow(activity?.window)
-                            this.controller = controller
-                            scaleType = PreviewView.ScaleType.FILL_CENTER
-                            previewView = this
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                )
-                DisposableEffect(previewView) {
-                    val view = previewView ?: return@DisposableEffect onDispose {}
-                    val streaming = Observer<PreviewView.StreamState> { if (it == PreviewView.StreamState.STREAMING) waitingForCamera = false }
-                    view.previewStreamState.observeForever(streaming)
-                    onDispose { view.previewStreamState.removeObserver(streaming) }
-                }
-                val lastFrame = LastPreviewFrame.image
-                val lastFrameAlpha by animateFloatAsState(if (waitingForCamera) 1f else 0f, tween(180), label = "lastFrame")
-                if (lastFrame != null && lastFrameAlpha > 0f) {
-                    Image(
-                        lastFrame, contentDescription = null, contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = lastFrameAlpha },
-                    )
-                }
-                Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    CircleIconButton(
-                        if (flashOn) JournalIcons.FlashOn else JournalIcons.FlashOff,
-                        if (flashOn) "Flash on" else "Flash off",
-                        { flashOn = !flashOn },
-                        onColour = true,
-                    )
-                    CircleIconButton(
-                        JournalIcons.Flip,
-                        if (front) "Switch to back camera" else "Switch to front camera",
-                        { front = !front },
-                        onColour = true,
-                    )
-                }
-            } else {
-                CameraOff(onOpenSettings = {
-                    context.startActivity(
-                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
-                    )
-                })
-            }
-        }
+    // Where a just-saved photo starts (the viewfinder) and ends (the journal handle), in this screen's coordinates.
+    var screen by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var viewfinder by remember { mutableStateOf<Rect?>(null) }
+    var handle by remember { mutableStateOf<Rect?>(null) }
+    val handleScale = remember { Animatable(1f) }
+    val bumpScope = rememberCoroutineScope()
 
-        // The only hint that the journal sits below the camera: swipe up anywhere above it, or tap it.
-        Box(
-            Modifier.align(Alignment.CenterHorizontally).size(width = 72.dp, height = 40.dp).swipeUpToOpen { openMonth() }
-                .clip(JournalShapes.pill)
-                .clickable(role = Role.Button, onClick = onOpenMonth)
-                .semantics { contentDescription = "Open journal" },
-            contentAlignment = Alignment.Center,
+    Box(Modifier.fillMaxSize().onGloballyPositioned { screen = it }) {
+        Column(
+            Modifier.fillMaxSize().background(JournalColors.Background).statusBarsPadding().navigationBarsPadding(),
         ) {
-            Box(Modifier.size(width = 36.dp, height = 4.dp).clip(JournalShapes.pill).background(JournalColors.TextMuted))
-        }
-
-        Row(
-            Modifier.fillMaxWidth().padding(start = 40.dp, end = 40.dp, top = 4.dp, bottom = 28.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CircleIconButton(
-                JournalIcons.Gallery, "Add photos from gallery",
-                launchPicker,
-                size = 52.dp,
-            )
             Box(
-                Modifier.size(86.dp).clip(CircleShape).background(if (granted) JournalColors.Action else JournalColors.Sunk)
-                    .clickable(enabled = granted && !busy, role = Role.Button, onClickLabel = "Take photo", onClick = ::shoot),
+                Modifier.fillMaxWidth().weight(1f).swipeUpToOpen { openMonth() }.padding(start = 12.dp, end = 12.dp, top = 14.dp)
+                    .onGloballyPositioned { c -> viewfinder = screen?.localBoundingBoxOf(c) }
+                    .clip(ViewfinderShape).background(JournalColors.Sunk),
+            ) {
+                if (granted) {
+                    AndroidView(
+                        // COMPATIBLE renders into a TextureView, which moves with screen transitions; the default SurfaceView stays put.
+                        factory = {
+                            PreviewView(it).apply {
+                                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                                // Screen flash for the front camera lights up this window.
+                                setScreenFlashWindow(activity?.window)
+                                this.controller = controller
+                                scaleType = PreviewView.ScaleType.FILL_CENTER
+                                previewView = this
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    DisposableEffect(previewView) {
+                        val view = previewView ?: return@DisposableEffect onDispose {}
+                        val streaming = Observer<PreviewView.StreamState> { if (it == PreviewView.StreamState.STREAMING) waitingForCamera = false }
+                        view.previewStreamState.observeForever(streaming)
+                        onDispose { view.previewStreamState.removeObserver(streaming) }
+                    }
+                    val lastFrame = LastPreviewFrame.image
+                    val lastFrameAlpha by animateFloatAsState(if (waitingForCamera) 1f else 0f, tween(180), label = "lastFrame")
+                    if (lastFrame != null && lastFrameAlpha > 0f) {
+                        Image(
+                            lastFrame, contentDescription = null, contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.fillMaxSize().graphicsLayer { alpha = lastFrameAlpha },
+                        )
+                    }
+                    Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        CircleIconButton(
+                            if (flashOn) JournalIcons.FlashOn else JournalIcons.FlashOff,
+                            if (flashOn) "Flash on" else "Flash off",
+                            { flashOn = !flashOn },
+                            onColour = true,
+                        )
+                        CircleIconButton(
+                            JournalIcons.Flip,
+                            if (front) "Switch to back camera" else "Switch to front camera",
+                            { front = !front },
+                            onColour = true,
+                        )
+                    }
+                } else {
+                    CameraOff(onOpenSettings = {
+                        context.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
+                        )
+                    })
+                }
+            }
+
+            // The only hint that the journal sits below the camera: swipe up anywhere above it, or tap it.
+            Box(
+                Modifier.align(Alignment.CenterHorizontally).size(width = 72.dp, height = 40.dp).swipeUpToOpen { openMonth() }
+                    .onGloballyPositioned { c -> handle = screen?.localBoundingBoxOf(c) }
+                    .graphicsLayer { scaleX = handleScale.value; scaleY = handleScale.value }
+                    .clip(JournalShapes.pill)
+                    .clickable(role = Role.Button, onClick = onOpenMonth)
+                    .semantics { contentDescription = "Open journal" },
                 contentAlignment = Alignment.Center,
             ) {
-                Box(Modifier.size(66.dp).clip(CircleShape).background(if (granted) JournalColors.OnAction else JournalColors.Line))
+                Box(Modifier.size(width = 36.dp, height = 4.dp).clip(JournalShapes.pill).background(JournalColors.TextMuted))
             }
-            CircleIconButton(JournalIcons.Pen, "Write an entry", onWrite, size = 52.dp)
+
+            Row(
+                Modifier.fillMaxWidth().padding(start = 40.dp, end = 40.dp, top = 4.dp, bottom = 28.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircleIconButton(
+                    JournalIcons.Gallery, "Add photos from gallery",
+                    launchPicker,
+                    size = 52.dp,
+                )
+                Box(
+                    Modifier.size(86.dp)
+                        .clickable(enabled = granted && !busy, role = Role.Button, onClickLabel = "Take photo", onClick = ::shoot)
+                        .clip(CircleShape).background(if (granted) JournalColors.Action else JournalColors.Sunk),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(Modifier.size(66.dp).clip(CircleShape).background(if (granted) JournalColors.OnAction else JournalColors.Line))
+                }
+                CircleIconButton(JournalIcons.Pen, "Write an entry", onWrite, size = 52.dp)
+            }
+        }
+        val from = viewfinder
+        val to = handle
+        if (justSaved != null && from != null && to != null) {
+            SavedPhotoShrink(justSaved, from, to) {
+                onJustSavedShown()
+                // The handle takes the photo in with a small bump.
+                bumpScope.launch {
+                    handleScale.animateTo(1.12f, pressSpring())
+                    handleScale.animateTo(1f, pressSpring())
+                }
+            }
         }
     }
+}
+
+/**
+ * The photo just saved, starting over the viewfinder and shrinking into the journal handle, so it is seen going into the
+ * journal. Starts once the photo is decoded; touches pass through to the camera underneath.
+ */
+@Composable
+private fun SavedPhotoShrink(file: File, from: Rect, to: Rect, onDone: () -> Unit) {
+    val progress = remember(file) { Animatable(0f) }
+    var loaded by remember(file) { mutableStateOf(false) }
+    val done by rememberUpdatedState(onDone)
+    LaunchedEffect(file, loaded) {
+        if (!loaded) return@LaunchedEffect
+        progress.animateTo(1f, navSpring())
+        done()
+    }
+    val density = LocalDensity.current
+    AsyncImage(
+        file, contentDescription = null, contentScale = ContentScale.Crop,
+        onSuccess = { loaded = true },
+        onError = { done() },
+        modifier = Modifier
+            .layout { measurable, constraints ->
+                val r = lerp(from, to, progress.value)
+                val p = measurable.measure(Constraints.fixed(r.width.roundToInt().coerceAtLeast(1), r.height.roundToInt().coerceAtLeast(1)))
+                layout(constraints.maxWidth, constraints.maxHeight) { p.place(r.left.roundToInt(), r.top.roundToInt()) }
+            }
+            .graphicsLayer {
+                val t = progress.value
+                // Fully visible until it is nearly in, then gone as it lands.
+                alpha = if (loaded) ((1f - t) / 0.2f).coerceIn(0f, 1f) else 0f
+                shape = RoundedCornerShape(with(density) { androidx.compose.ui.unit.lerp(36.dp, 20.dp, t).toPx() })
+                clip = true
+            },
+    )
 }
 
 /**

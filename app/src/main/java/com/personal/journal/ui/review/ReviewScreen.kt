@@ -52,7 +52,7 @@ import kotlinx.coroutines.launch
 private val PhotoShape = RoundedCornerShape(36.dp)
 
 @Composable
-fun ReviewScreen(vm: ReviewViewModel, onDone: () -> Unit, onRetake: () -> Unit) {
+fun ReviewScreen(vm: ReviewViewModel, onDone: (entryId: String) -> Unit, onRetake: () -> Unit) {
     var caption by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
@@ -116,7 +116,7 @@ fun ReviewScreen(vm: ReviewViewModel, onDone: () -> Unit, onRetake: () -> Unit) 
                     saving = true
                     scope.launch {
                         runCatching { vm.save(caption) }
-                            .onSuccess { onDone() }
+                            .onSuccess { onDone(it) }
                             .onFailure { error = it.message ?: "Couldn't save this photo"; saving = false }
                     }
                 })

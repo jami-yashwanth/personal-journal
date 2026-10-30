@@ -71,9 +71,9 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
             CircleIconButton(JournalIcons.Close, "Discard and go back", ::close)
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
-                    Modifier.height(34.dp).clip(JournalShapes.pill).background(JournalColors.Card)
+                    Modifier.height(34.dp).clickable(role = Role.Button, onClickLabel = "Change time") { pickTime = true }
+                        .clip(JournalShapes.pill).background(JournalColors.Card)
                         .border(1.5.dp, JournalColors.Line, JournalShapes.pill)
-                        .clickable(role = Role.Button, onClickLabel = "Change time") { pickTime = true }
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text(whenLabel(vm.takenAt), style = MaterialTheme.typography.bodySmall, color = JournalColors.TextSecondary) }
