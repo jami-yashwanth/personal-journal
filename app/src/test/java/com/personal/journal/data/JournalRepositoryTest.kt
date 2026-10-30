@@ -192,4 +192,27 @@ class JournalRepositoryTest {
         assertEquals("2026-10-25", repo.today())
         assertEquals(Instant.parse("2026-10-25T18:29:00Z").toEpochMilli(), now.toEpochMilli())
     }
+
+    @Test
+    fun fourNewTagsOnOneEntryGetFourColours() = runTest {
+        repo.saveText("Sunday", listOf("family", "cricket", "office", "gym"), now.toEpochMilli())
+        assertEquals(listOf(0, 1, 2, 3), db.tagDao().colourSlots().sorted())
+    }
+
+    @Test
+    fun tagsAcrossEntriesGetDistinctColoursUntilThePaletteRunsOut() = runTest {
+        listOf("family", "cricket", "office", "gym", "walk", "food", "travel").forEach {
+            repo.saveText(it, listOf(it), now.toEpochMilli())
+        }
+        val slots = listOf("family", "cricket", "office", "gym", "walk", "food", "travel").map { db.tagDao().findByName(it)!!.colourSlot }
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 0), slots)
+    }
+
+    @Test
+    fun reusingATagKeepsItsColour() = runTest {
+        repo.saveText("a", listOf("gym", "office"), now.toEpochMilli())
+        repo.saveText("b", listOf("office"), now.toEpochMilli())
+        assertEquals(1, db.tagDao().findByName("office")!!.colourSlot)
+        assertEquals(mapOf("gym" to 0, "office" to 1), repo.observeTagSlots().first())
+    }
 }

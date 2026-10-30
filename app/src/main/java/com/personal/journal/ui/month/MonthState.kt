@@ -6,12 +6,13 @@ import com.personal.journal.bento.TileSize
 import com.personal.journal.bento.pack
 import com.personal.journal.data.db.EntryType
 import com.personal.journal.data.db.EntryWithTags
+import com.personal.journal.data.db.TagEntity
 import java.time.YearMonth
 
 /** One thing shown on a day's tile. */
 sealed interface TileItem {
     data class Photo(val thumb: String) : TileItem
-    data class Note(val text: String, val tags: List<String>) : TileItem
+    data class Note(val text: String, val tags: List<TagEntity>) : TileItem
 }
 
 data class TileUi(
@@ -44,7 +45,7 @@ private fun capacity(size: TileSize) = when (size) {
 /** Photos and notes (written entries and photo captions) take turns, so a photo-heavy day still shows its words. */
 private fun interleave(list: List<EntryWithTags>): List<TileItem> {
     val photos = list.mapNotNull { it.entry.thumbFile }.map { TileItem.Photo(it) }
-    val notes = list.mapNotNull { e -> e.entry.text?.takeIf(String::isNotBlank)?.let { TileItem.Note(it, e.tags.map { t -> t.name }) } }
+    val notes = list.mapNotNull { e -> e.entry.text?.takeIf(String::isNotBlank)?.let { TileItem.Note(it, e.tags) } }
     return List(maxOf(photos.size, notes.size)) { i -> listOfNotNull(photos.getOrNull(i), notes.getOrNull(i)) }.flatten()
 }
 

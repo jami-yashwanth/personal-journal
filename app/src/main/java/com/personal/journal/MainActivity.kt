@@ -35,6 +35,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.personal.journal.ui.appContainer
+import com.personal.journal.ui.theme.LocalTagSlots
 import com.personal.journal.ui.capture.CaptureScreen
 import com.personal.journal.ui.day.DayScreen
 import com.personal.journal.ui.day.DayViewModel
@@ -119,7 +121,8 @@ class MainActivity : FragmentActivity() {
         }
         val container = (application as JournalApp).container
         setContent {
-            JournalTheme {
+            val tagSlots by container.repository.observeTagSlots().collectAsState(initial = emptyMap())
+            CompositionLocalProvider(LocalTagSlots provides tagSlots) { JournalTheme {
                 val nav = rememberNavController()
                 LaunchedEffect(shortcut) {
                     when (shortcut) {
@@ -155,7 +158,7 @@ class MainActivity : FragmentActivity() {
                         })
                     }
                 }
-            }
+            } }
         }
     }
 

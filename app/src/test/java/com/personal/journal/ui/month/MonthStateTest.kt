@@ -105,6 +105,8 @@ class MonthStateTest {
     @Test
     fun noteCarriesItsTags() {
         val tile = buildMonthUi(october, listOf(e(7, photo = false, text = "Nets at six", "office", "cricket")), "2026-10-25", null, emptyList()).tiles.single()
-        assertEquals(listOf(TileItem.Note("Nets at six", listOf("office", "cricket"))), tile.items)
+        val note = tile.items.single() as TileItem.Note
+        assertEquals("Nets at six", note.text)
+        assertEquals(listOf("office", "cricket"), note.tags.map { it.name })
     }
 }

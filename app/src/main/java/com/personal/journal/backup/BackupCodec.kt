@@ -13,6 +13,8 @@ data class BackupEntry(
     val localDate: String,
     val dateSource: String,
     val tags: List<String> = emptyList(),
+    /** Tag name to colour slot; absent in backups made before tags had slots. */
+    val tagSlots: Map<String, Int> = emptyMap(),
     val createdAt: Long,
     val updatedAt: Long,
     val deletedAt: Long? = null,
@@ -33,6 +35,7 @@ object BackupCodec {
         BackupEntry(
             id = e.entry.id, type = e.entry.type.name, text = e.entry.text, takenAt = e.entry.takenAt,
             localDate = e.entry.localDate, dateSource = e.entry.dateSource.name, tags = e.tags.map { it.name }.sorted(),
+            tagSlots = e.tags.associate { it.name to it.colourSlot },
             createdAt = e.entry.createdAt, updatedAt = e.entry.updatedAt, deletedAt = e.entry.deletedAt,
         ),
     ).toByteArray()

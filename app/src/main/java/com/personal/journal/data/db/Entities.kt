@@ -1,5 +1,6 @@
 package com.personal.journal.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -37,6 +38,8 @@ data class TagEntity(
     val name: String,
     val useCount: Int,
     val lastUsedAt: Long,
+    /** Index into the tag palette, fixed when the tag is created; see [com.personal.journal.data.nextColourSlot]. */
+    @ColumnInfo(defaultValue = "0") val colourSlot: Int = 0,
 )
 
 @Entity(

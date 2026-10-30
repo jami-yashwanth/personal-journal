@@ -8,6 +8,7 @@ import com.personal.journal.data.db.EntryWithTags
 import com.personal.journal.data.db.JournalDatabase
 import com.personal.journal.data.db.TagEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import java.io.InputStream
@@ -134,13 +135,16 @@ class JournalRepository(
         val ids = normalized.map { name ->
             val existing = tags.findByName(name)
             when {
-                existing == null -> TagEntity(newId(), name, useCount = 1, lastUsedAt = t).also { tags.insert(it) }
+                existing == null -> tags.create(newId(), name, lastUsedAt = t)
                 name !in previous -> existing.copy(useCount = existing.useCount + 1, lastUsedAt = t).also { tags.update(it) }
                 else -> existing
             }.id
         }
         tags.setTagsFor(entryId, ids)
     }
+
+    /** Every tag's colour slot by name, for the UI's colour lookup. */
+    fun observeTagSlots(): Flow<Map<String, Int>> = tags.observeAll().map { all -> all.associate { it.name to it.colourSlot } }
 
     fun observeMonth(month: YearMonth): Flow<List<EntryWithTags>> = entries.observeMonth(month.toString())
 

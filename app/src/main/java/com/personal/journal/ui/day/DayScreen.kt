@@ -48,6 +48,7 @@ import com.personal.journal.ui.components.rememberImportPicker
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
 import com.personal.journal.ui.theme.entryColour
+import com.personal.journal.data.db.TagEntity
 import com.personal.journal.ui.timeLabel
 import com.personal.journal.ui.motion.ImageKeys
 import com.personal.journal.ui.motion.besideSharedFlight
@@ -105,7 +106,7 @@ fun DayScreen(
                 if (entry.type == EntryType.PHOTO && entry.photoFile != null) {
                     PhotoTile(entry.id, photoFile(entry.photoFile), item.aspect ?: FALLBACK_ASPECT, timeLabel(entry.takenAt), entry.text, imageKeys, open)
                 } else {
-                    NoteTile(entry.id, entry.text.orEmpty(), timeLabel(entry.takenAt), item.entry.tags.map { it.name }, open)
+                    NoteTile(entry.id, entry.text.orEmpty(), timeLabel(entry.takenAt), item.entry.tags, open)
                 }
             }
         }
@@ -156,9 +157,9 @@ private fun PhotoTile(id: String, file: File, aspect: Float, time: String, capti
 
 /** A written entry on its tag colour: the words, growing to its full length, then "time · tag". */
 @Composable
-private fun NoteTile(id: String, text: String, time: String, tags: List<String>, onClick: () -> Unit) {
+private fun NoteTile(id: String, text: String, time: String, tags: List<TagEntity>, onClick: () -> Unit) {
     val colour = entryColour(tags)
-    val footer = tags.minOrNull()?.let { "$time · $it" } ?: time
+    val footer = tags.minOfOrNull { it.name }?.let { "$time · $it" } ?: time
     Column(
         Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Open note from $time", onClick = onClick)
             .sharedTile(noteKey(id), JournalShapes.card).clip(JournalShapes.card).background(colour.fill)

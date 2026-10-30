@@ -124,4 +124,15 @@ class RestoreRunnerTest {
         assertTrue(e is NoBackupException)
         assertNull(store.objects["meta.json.enc"])
     }
+
+    @Test
+    fun restoredTagsKeepTheirColours() = runTest {
+        // "walk" takes slot 0 on the source and never reaches the target, so a fresh assignment would differ.
+        source.repo.delete(source.repo.saveText("w", listOf("walk"), source.now.toEpochMilli()))
+        backupSample()
+        val r = runner()
+        r.restore(r.verify(phrase)).toList()
+        assertEquals(1, target.db.tagDao().findByName("office")!!.colourSlot)
+        assertEquals(2, target.db.tagDao().findByName("gym")!!.colourSlot)
+    }
 }
