@@ -1,17 +1,22 @@
 package com.personal.journal.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -38,9 +43,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
+import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
 import com.personal.journal.ui.theme.JournalShapes
+import com.personal.journal.ui.theme.TagPalette
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalTime
@@ -106,18 +114,28 @@ fun SettingsScreen(
                     ValueRow("Time", ampm.format(state.reminderTime).lowercase()) { pickTime = true }
                 }
             }
-            Card {
-                TextRow(
-                    "Backup",
-                    backupStatusLine(state.backupConnected, state.backup.lastSuccessAt, state.backup.entryCount, state.backup.error, System.currentTimeMillis()),
-                    error = state.backupConnected && state.backup.error != null,
-                )
-                Divider()
-                if (!state.backupConnected) {
-                    ActionRow("Set up backup", onSetUpBackup)
+            if (!state.backupConnected) {
+                Column(
+                    Modifier.fillMaxWidth().clip(JournalShapes.card).background(TagPalette[3].fill).padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text("Not backed up", style = MaterialTheme.typography.titleLarge, color = JournalColors.OnColour)
+                    Text(
+                        "Your ${state.entryCount} ${if (state.entryCount == 1) "entry lives" else "entries live"} only on this phone.",
+                        style = MaterialTheme.typography.bodyMedium, color = JournalColors.OnColour,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    PrimaryButton("Set up backup", onSetUpBackup, onColour = true)
+                }
+                Card { ActionRow("Restore from backup", onRestore) }
+            } else {
+                Card {
+                    TextRow(
+                        "Backup",
+                        backupStatusLine(state.backupConnected, state.backup.lastSuccessAt, state.backup.entryCount, state.backup.error, System.currentTimeMillis()),
+                        error = state.backup.error != null,
+                    )
                     Divider()
-                    ActionRow("Restore from backup", onRestore)
-                } else {
                     ActionRow("Back up now", vm.backup::backUpNow)
                     Divider()
                     ToggleRow("Use mobile data", "Off: backs up only on Wi-Fi", state.useMobileData, onChange = vm::setUseMobileData)
@@ -137,7 +155,7 @@ fun SettingsScreen(
         val t = rememberTimePickerState(state.reminderTime.hour, state.reminderTime.minute, is24Hour = false)
         AlertDialog(
             onDismissRequest = { pickTime = false },
-            containerColor = JournalColors.Surface,
+            containerColor = JournalColors.Card,
             confirmButton = { TextButton(onClick = { vm.setReminderTime(LocalTime.of(t.hour, t.minute)); pickTime = false }) { Text("Done", color = JournalColors.TextPrimary) } },
             dismissButton = { TextButton(onClick = { pickTime = false }) { Text("Cancel", color = JournalColors.TextSecondary) } },
             text = { TimePicker(t) },
@@ -146,12 +164,12 @@ fun SettingsScreen(
     if (confirmDisconnect) {
         AlertDialog(
             onDismissRequest = { confirmDisconnect = false },
-            containerColor = JournalColors.Surface,
+            containerColor = JournalColors.Card,
             title = { Text("Disconnect backup?", color = JournalColors.TextPrimary) },
             text = { Text("New entries won't be backed up. Your existing backup in R2 is not deleted.", color = JournalColors.TextSecondary) },
             confirmButton = {
                 TextButton(onClick = { confirmDisconnect = false; scope.launch { vm.backup.disconnect() } }) {
-                    Text("Disconnect", color = JournalColors.DestructiveIcon)
+                    Text("Disconnect", color = JournalColors.TextPrimary)
                 }
             },
             dismissButton = { TextButton(onClick = { confirmDisconnect = false }) { Text("Cancel", color = JournalColors.TextPrimary) } },
@@ -160,7 +178,7 @@ fun SettingsScreen(
     phrase?.let { words ->
         AlertDialog(
             onDismissRequest = { phrase = null },
-            containerColor = JournalColors.Surface,
+            containerColor = JournalColors.Card,
             title = { Text("Recovery phrase", color = JournalColors.TextPrimary) },
             text = { PhraseGrid(words) },
             confirmButton = { TextButton(onClick = { phrase = null }) { Text("Done", color = JournalColors.TextPrimary) } },
@@ -188,10 +206,13 @@ fun PhraseGrid(words: List<String>) {
 
 @Composable
 private fun Card(content: @Composable ColumnScope.() -> Unit) =
-    Column(Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Surface), content = content)
+    Column(
+        Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card).border(1.5.dp, JournalColors.Line, JournalShapes.card),
+        content = content,
+    )
 
 @Composable
-private fun Divider() = HorizontalDivider(color = JournalColors.Hairline, modifier = Modifier.padding(horizontal = 16.dp))
+private fun Divider() = HorizontalDivider(color = JournalColors.Line, modifier = Modifier.padding(horizontal = 16.dp))
 
 @Composable
 private fun ToggleRow(title: String, subtitle: String, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
@@ -207,9 +228,9 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, enabled
         Switch(
             checked = checked, onCheckedChange = onChange, enabled = enabled,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = JournalColors.OnPrimary, checkedTrackColor = JournalColors.PrimaryFill,
-                uncheckedThumbColor = JournalColors.TextMuted, uncheckedTrackColor = JournalColors.SurfaceRaised,
-                uncheckedBorderColor = JournalColors.Hairline,
+                checkedThumbColor = JournalColors.OnAction, checkedTrackColor = JournalColors.Action,
+                uncheckedThumbColor = JournalColors.TextMuted, uncheckedTrackColor = JournalColors.Sunk,
+                uncheckedBorderColor = JournalColors.Line,
             ),
         )
     }
@@ -230,7 +251,7 @@ private fun ValueRow(title: String, value: String, onClick: () -> Unit) {
 private fun TextRow(title: String, subtitle: String, error: Boolean = false) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
         Text(title, style = MaterialTheme.typography.bodyLarge, color = JournalColors.TextPrimary)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = if (error) JournalColors.DestructiveIcon else JournalColors.TextMuted)
+        if (error) ErrorText(subtitle) else Text(subtitle, style = MaterialTheme.typography.bodySmall, color = JournalColors.TextMuted)
     }
 }
 
@@ -240,10 +261,10 @@ private fun ActionRow(title: String, onClick: () -> Unit, destructive: Boolean =
         Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            title, style = MaterialTheme.typography.bodyLarge,
-            color = if (destructive) JournalColors.DestructiveIcon else JournalColors.TextPrimary, modifier = Modifier.weight(1f),
-        )
+        if (destructive) {
+            Box(Modifier.padding(end = 10.dp).size(8.dp).clip(CircleShape).background(JournalColors.Danger))
+        }
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = JournalColors.TextPrimary, modifier = Modifier.weight(1f))
         if (!destructive) androidx.compose.material3.Icon(JournalIcons.ChevronRight, null, tint = JournalColors.TextMuted)
     }
 }

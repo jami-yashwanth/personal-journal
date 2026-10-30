@@ -8,6 +8,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
@@ -28,6 +29,12 @@ fun whenLabel(millis: Long, zone: ZoneId = ZoneId.systemDefault(), today: LocalD
 fun longWhenLabel(millis: Long, zone: ZoneId = ZoneId.systemDefault()): String {
     val dt = Instant.ofEpochMilli(millis).atZone(zone)
     return "${longDay.format(dt)}, ${time.format(dt)}"
+}
+
+/** "Monday, 26", the title of a day's page. */
+fun dayTitle(localDate: String): String {
+    val date = LocalDate.parse(localDate)
+    return "${date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}, ${date.dayOfMonth}"
 }
 
 fun timeLabel(millis: Long, zone: ZoneId = ZoneId.systemDefault()): String =

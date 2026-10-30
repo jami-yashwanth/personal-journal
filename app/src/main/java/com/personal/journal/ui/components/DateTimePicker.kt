@@ -37,7 +37,7 @@ fun DateTimePickerDialog(
         initialSelectedDateMillis = initialDt.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
     )
     val timeState = rememberTimePickerState(initialDt.hour, initialDt.minute, is24Hour = true)
-    val colors = DatePickerDefaults.colors(containerColor = JournalColors.Surface)
+    val colors = DatePickerDefaults.colors(containerColor = JournalColors.Card)
 
     if (pickedDate == null) {
         DatePickerDialog(
@@ -53,7 +53,7 @@ fun DateTimePickerDialog(
     } else {
         AlertDialog(
             onDismissRequest = onDismiss,
-            containerColor = JournalColors.Surface,
+            containerColor = JournalColors.Card,
             confirmButton = {
                 TextButton(onClick = {
                     val t = LocalTime.of(timeState.hour, timeState.minute)

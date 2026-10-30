@@ -41,6 +41,7 @@ import com.personal.journal.backup.WrongPhraseException
 import com.personal.journal.data.PhotoStore
 import com.personal.journal.data.db.JournalDatabase
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
@@ -124,11 +125,11 @@ fun RestoreScreen(vm: RestoreViewModel, onDone: () -> Unit, onBack: () -> Unit) 
             Input("Secret Access Key", vm.secret, secret = true) { vm.secret = it }
             Input("Bucket name", vm.bucket) { vm.bucket = it }
             Input("Recovery phrase (12 words)", vm.phraseInput, multiline = true) { vm.phraseInput = it }
-            vm.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = JournalColors.DestructiveIcon) }
+            vm.error?.let { ErrorText(it) }
             if (vm.running && vm.total > 0) {
                 LinearProgressIndicator(
                     progress = { vm.done.toFloat() / vm.total },
-                    color = JournalColors.PrimaryFill, trackColor = JournalColors.SurfaceRaised,
+                    color = JournalColors.Action, trackColor = JournalColors.Sunk,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text("Restoring ${vm.done} of ${vm.total}", style = MaterialTheme.typography.bodySmall, color = JournalColors.TextMuted)
@@ -152,7 +153,7 @@ private fun Input(label: String, value: String, secret: Boolean = false, multili
             cursorBrush = SolidColor(JournalColors.TextPrimary),
             visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
             keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Ascii, autoCorrectEnabled = false),
-            modifier = Modifier.fillMaxWidth().clip(JournalShapes.button).background(JournalColors.Surface).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().clip(JournalShapes.button).background(JournalColors.Card).padding(16.dp),
         )
     }
 }

@@ -24,6 +24,7 @@ object JournalIcons {
 
     val Search = icon("search", "M11,4.5a6.5,6.5 0,1 1,0 13a6.5,6.5 0,1 1,0 -13z", "M20,20l-4.2,-4.2")
     val Close = icon("close", "M6,6l12,12", "M18,6L6,18")
+    val Arrow = icon("arrow", "M5,12h14", "M13,6l6,6l-6,6")
     val Back = icon("back", "M15,5l-7,7l7,7")
     val ChevronRight = icon("chevron", "M9,5l7,7l-7,7")
     val Camera = icon("camera", "M4,8h3l2,-3h6l2,3h3v11H4z", "M12,9.5a3.5,3.5 0,1 1,0 7a3.5,3.5 0,1 1,0 -7z")

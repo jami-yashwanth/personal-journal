@@ -35,6 +35,7 @@ import com.personal.journal.backup.InvalidPhraseException
 import com.personal.journal.backup.R2Credentials
 import com.personal.journal.backup.WrongPhraseException
 import com.personal.journal.ui.components.CircleIconButton
+import com.personal.journal.ui.components.ErrorText
 import com.personal.journal.ui.components.JournalIcons
 import com.personal.journal.ui.components.PrimaryButton
 import com.personal.journal.ui.theme.JournalColors
@@ -126,7 +127,7 @@ fun BackupSetupScreen(vm: BackupSetupViewModel, onDone: () -> Unit, onBack: () -
                 }
                 SetupStep.SHOW_PHRASE -> {
                     Title("Your recovery phrase", "Write these 12 words down and keep them somewhere safe, like your password manager. You need them to restore your journal on a new phone. Without them the backup can't be opened.")
-                    Column(Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Surface).padding(18.dp)) { PhraseGrid(vm.phrase) }
+                    Column(Modifier.fillMaxWidth().clip(JournalShapes.card).background(JournalColors.Card).padding(18.dp)) { PhraseGrid(vm.phrase) }
                     PrimaryButton("I've written it down", modifier = Modifier.fillMaxWidth(), onClick = { vm.step = SetupStep.CONFIRM_PHRASE })
                 }
                 SetupStep.CONFIRM_PHRASE, SetupStep.EXISTING_PHRASE -> {
@@ -156,7 +157,7 @@ private fun Title(title: String, body: String) {
 
 @Composable
 private fun Error(message: String?) {
-    if (message != null) Text(message, style = MaterialTheme.typography.bodySmall, color = JournalColors.DestructiveIcon)
+    if (message != null) ErrorText(message)
 }
 
 @Composable
@@ -172,7 +173,7 @@ private fun Field(label: String, value: String, secret: Boolean = false, multili
             cursorBrush = SolidColor(JournalColors.TextPrimary),
             visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
             keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else KeyboardType.Ascii, autoCorrectEnabled = false),
-            modifier = Modifier.fillMaxWidth().clip(JournalShapes.button).background(JournalColors.Surface).padding(16.dp),
+            modifier = Modifier.fillMaxWidth().clip(JournalShapes.button).background(JournalColors.Card).padding(16.dp),
         )
     }
 }

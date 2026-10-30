@@ -31,6 +31,14 @@ class WriteViewModelTest {
     }
 
     @Test
+    fun savesToTodayOnlyForToday() {
+        val vm = WriteViewModel(j.repo)
+        assertTrue(vm.savesToToday)
+        vm.updateTakenAt(j.millis("2026-10-20T09:00:00+05:30"))
+        assertFalse(vm.savesToToday)
+    }
+
+    @Test
     fun writeUnsavedFlag() {
         val vm = WriteViewModel(j.repo)
         assertFalse(vm.hasUnsavedText)

@@ -2,10 +2,13 @@ package com.personal.journal.ui.write
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +38,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.personal.journal.ui.components.CircleIconButton
 import com.personal.journal.ui.components.DateTimePickerDialog
@@ -69,26 +71,26 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
             CircleIconButton(JournalIcons.Close, "Discard and go back", ::close)
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
-                    Modifier.height(34.dp).clip(JournalShapes.pill).background(JournalColors.Surface)
-                        .clickable(role = Role.Button, onClickLabel = "Change time") { pickTime = true }
+                    Modifier.height(34.dp).clickable(role = Role.Button, onClickLabel = "Change time") { pickTime = true }
+                        .clip(JournalShapes.pill).background(JournalColors.Card)
+                        .border(1.5.dp, JournalColors.Line, JournalShapes.pill)
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text(whenLabel(vm.takenAt), style = MaterialTheme.typography.bodySmall, color = JournalColors.TextSecondary) }
             }
-            PrimaryButton("Save", height = 44.dp, enabled = vm.canSave, onClick = {
-                scope.launch { if (vm.save() != null) onDone() }
-            })
+            // Balances the close button so the date chip sits centred.
+            Spacer(Modifier.size(48.dp))
         }
         BasicTextField(
             value = vm.text,
             onValueChange = vm::updateText,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 21.sp, lineHeight = 31.sp, color = JournalColors.TextPrimary),
-            cursorBrush = SolidColor(JournalColors.TextPrimary),
+            textStyle = MaterialTheme.typography.headlineLarge.copy(color = JournalColors.TextPrimary),
+            cursorBrush = SolidColor(JournalColors.Action),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 22.dp, vertical = 18.dp).focusRequester(focus),
             decorationBox = { inner ->
                 if (vm.text.isEmpty()) {
-                    Text("What happened today?", style = MaterialTheme.typography.bodyLarge.copy(fontSize = 21.sp), color = JournalColors.TextMuted)
+                    Text("What happened today?", style = MaterialTheme.typography.headlineLarge, color = JournalColors.TextMuted)
                 }
                 inner()
             },
@@ -99,6 +101,11 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
             onOpenSearch = vm.tags::openSearch, onCloseSearch = vm.tags::closeSearch,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
+        PrimaryButton(
+            if (vm.savesToToday) "Save to today" else "Save", enabled = vm.canSave, arrow = true,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 8.dp, bottom = 16.dp),
+            onClick = { scope.launch { if (vm.save() != null) onDone() } },
+        )
     }
 
     if (pickTime) {
@@ -107,9 +114,9 @@ fun WriteScreen(vm: WriteViewModel, onDone: () -> Unit, onClose: () -> Unit) {
     if (confirmDiscard) {
         AlertDialog(
             onDismissRequest = { confirmDiscard = false },
-            containerColor = JournalColors.Surface,
+            containerColor = JournalColors.Card,
             title = { Text("Discard this entry?", color = JournalColors.TextPrimary) },
-            confirmButton = { TextButton(onClick = { confirmDiscard = false; onClose() }) { Text("Discard", color = JournalColors.DestructiveIcon) } },
+            confirmButton = { TextButton(onClick = { confirmDiscard = false; onClose() }) { Text("Discard", color = JournalColors.TextPrimary) } },
             dismissButton = { TextButton(onClick = { confirmDiscard = false }) { Text("Keep writing", color = JournalColors.TextPrimary) } },
         )
     }

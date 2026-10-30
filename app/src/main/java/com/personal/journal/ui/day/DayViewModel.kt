@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.personal.journal.data.JournalRepository
 import com.personal.journal.data.db.EntryWithTags
+import com.personal.journal.ui.dayTitle
+import com.personal.journal.ui.plural
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
@@ -37,12 +39,10 @@ class DayViewModel(repository: JournalRepository, localDate: String) : ViewModel
     private val isToday = localDate == repository.today()
 
     val state: StateFlow<DayUiState?> = repository.observeDay(localDate).map { list ->
-        val weekday = date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
         val month = date.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)
-        val n = list.size
         DayUiState(
-            title = "$weekday, ${date.dayOfMonth}",
-            subtitle = "${if (isToday) "Today" else "$month ${date.year}"}, $n ${if (n == 1) "entry" else "entries"}",
+            title = dayTitle(localDate),
+            subtitle = "${if (isToday) "Today" else "$month ${date.year}"} · ${plural(list.size, "entry", "entries")}",
             items = list.map { e -> DayItem(e, e.entry.thumbFile?.let { aspectOf(repository.photoFile(it)) }) },
         )
     }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)

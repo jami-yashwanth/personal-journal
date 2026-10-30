@@ -38,6 +38,8 @@ class JournalRepository(
 
     fun today(): String = localDateOf(now(), zone())
 
+    fun isToday(millis: Long): Boolean = localDateOf(millis, zone()) == today()
+
     suspend fun savePhoto(
         source: InputStream,
         caption: String?,

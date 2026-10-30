@@ -25,6 +25,7 @@ data class SettingsUi(
     val backup: BackupStatus,
     val useMobileData: Boolean,
     val storageLine: String,
+    val entryCount: Int,
 )
 
 /** Backup actions the settings screen needs; implemented by the backup package. */
@@ -62,9 +63,9 @@ class SettingsViewModel(
     val state: StateFlow<SettingsUi?> = combine(
         combine(settings.lockEnabled, settings.reminderEnabled, settings.reminderTime) { a, b, c -> Triple(a, b, c) },
         combine(backup.connected, settings.backupStatus, settings.backupUseMobileData) { a, b, c -> Triple(a, b, c) },
-        storage,
-    ) { (lock, reminder, time), (connected, status, mobile), storageLine ->
-        SettingsUi(lock, reminder, time, connected, status, mobile, storageLine)
+        combine(storage, repository.observeLiveCount()) { line, count -> line to count },
+    ) { (lock, reminder, time), (connected, status, mobile), (storageLine, count) ->
+        SettingsUi(lock, reminder, time, connected, status, mobile, storageLine, count)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun setLock(on: Boolean) = viewModelScope.launch { settings.setLock(on) }

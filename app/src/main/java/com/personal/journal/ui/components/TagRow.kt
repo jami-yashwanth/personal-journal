@@ -66,7 +66,7 @@ fun TagRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onOpenSearch) {
-                Box(Modifier.size(32.dp).clip(CircleShape).background(JournalColors.Surface), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(32.dp).clip(CircleShape).background(JournalColors.Card), contentAlignment = Alignment.Center) {
                     Icon(JournalIcons.Search, contentDescription = "Search tags", tint = JournalColors.TextSecondary, modifier = Modifier.size(15.dp))
                 }
             }
@@ -80,7 +80,7 @@ fun TagRow(
     LaunchedEffect(Unit) { focus.requestFocus() }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
-            Modifier.fillMaxWidth().height(46.dp).clip(JournalShapes.pill).background(JournalColors.Surface)
+            Modifier.fillMaxWidth().height(46.dp).clip(JournalShapes.pill).background(JournalColors.Card)
                 .padding(start = 16.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
